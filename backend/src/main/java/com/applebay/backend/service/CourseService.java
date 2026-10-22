@@ -1,7 +1,7 @@
-package com.applebay.service;
+package com.applebay.backend.service;
 
-import com.applebay.entity.Course;
-import com.applebay.repository.CourseRepository;
+import com.applebay.backend.entity.Course;
+import com.applebay.backend.repository.CourseRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
