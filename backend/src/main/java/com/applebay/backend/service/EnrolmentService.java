@@ -66,4 +66,13 @@ public class EnrolmentService {
 
         return enrolmentRepository.save(enrolment);
     }
+    public List<Enrolment> getEnrolmentsByCourse(Long courseId) {
+
+    if (!courseRepository.existsById(courseId)) {
+        throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Course not found");
+    }
+
+    return enrolmentRepository.findByCourse_Id(courseId);
+    }
 }

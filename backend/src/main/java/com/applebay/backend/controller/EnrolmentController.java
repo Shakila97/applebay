@@ -35,4 +35,10 @@ public class EnrolmentController {
                 request.studentId(),
                 request.courseId());
     }
+    @GetMapping("/courses/{courseId}")
+    public List<Enrolment> getEnrolmentsByCourse(
+        @PathVariable Long courseId) {
+
+    return enrolmentService.getEnrolmentsByCourse(courseId);
+    }
 }
