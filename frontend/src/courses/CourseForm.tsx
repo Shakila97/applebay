@@ -2,15 +2,29 @@
 
 import { useState, type FormEvent } from "react";
 
-type Props = {
-  onSaved: () => void;
+type Course = {
+  id: number;
+  code: string;
+  name: string;
+  level: string;
+  duration: string;
 };
 
-export default function CourseForm({ onSaved }: Props) {
-  const [code, setCode] = useState("");
-  const [name, setName] = useState("");
-  const [level, setLevel] = useState("HND");
-  const [duration, setDuration] = useState("");
+type Props = {
+  course?: Course | null;
+  onSaved: () => void;
+  onCancel: () => void;
+};
+
+export default function CourseForm({
+  course,
+  onSaved,
+  onCancel,
+}: Props) {
+  const [code, setCode] = useState(course?.code ?? "");
+  const [name, setName] = useState(course?.name ?? "");
+  const [level, setLevel] = useState(course?.level ?? "HND");
+  const [duration, setDuration] = useState(course?.duration ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -22,18 +36,21 @@ export default function CourseForm({ onSaved }: Props) {
     setMessage("");
 
     try {
-      const response = await fetch("/api/courses", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          code: code.trim(),
-          name: name.trim(),
-          level,
-          duration: duration.trim(),
-        }),
-      });
+      const response = await fetch(
+        course ? `/api/courses/${course.id}` : "/api/courses",
+        {
+          method: course ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            code: code.trim(),
+            name: name.trim(),
+            level,
+            duration: duration.trim(),
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(
@@ -41,11 +58,14 @@ export default function CourseForm({ onSaved }: Props) {
         );
       }
 
-      setCode("");
-      setName("");
-      setLevel("HND");
-      setDuration("");
-      setMessage("Course saved successfully.");
+      if (!course) {
+        setCode("");
+        setName("");
+        setLevel("HND");
+        setDuration("");
+        setMessage("Course saved successfully.");
+      }
+
       onSaved();
     } catch (error) {
       setError(
@@ -63,7 +83,9 @@ export default function CourseForm({ onSaved }: Props) {
       onSubmit={handleSubmit}
       className="mb-8 rounded border p-5"
     >
-      <h2 className="mb-4 text-xl font-semibold">Add course</h2>
+      <h2 className="mb-4 text-xl font-semibold">
+        {course ? "Edit course" : "Add course"}
+      </h2>
 
       <fieldset disabled={saving} className="space-y-4">
         <label className="block">
@@ -105,19 +127,34 @@ export default function CourseForm({ onSaved }: Props) {
           <input
             required
             maxLength={60}
-            placeholder="6 months"
             value={duration}
             onChange={(event) => setDuration(event.target.value)}
             className={inputStyle}
           />
         </label>
 
-        <button
-          type="submit"
-          className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
-        >
-          {saving ? "Saving..." : "Save course"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            className="rounded bg-blue-700 px-4 py-2 text-white"
+          >
+            {saving
+              ? "Saving..."
+              : course
+                ? "Update course"
+                : "Save course"}
+          </button>
+
+          {course && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded border px-4 py-2"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </fieldset>
 
       {error && (
@@ -132,6 +169,5 @@ export default function CourseForm({ onSaved }: Props) {
         </p>
       )}
     </form>
-    
   );
 }

@@ -18,6 +18,7 @@ export default function CoursesPage() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -72,6 +73,10 @@ export default function CoursesPage() {
         );
       }
 
+      if (editingCourse?.id === id) {
+        setEditingCourse(null);
+      }
+
       setCourses((current) =>
         current.filter((course) => course.id !== id)
       );
@@ -88,7 +93,15 @@ export default function CoursesPage() {
     <main className="mx-auto max-w-5xl p-6">
       <h1 className="mb-6 text-3xl font-bold">Courses</h1>
 
-      <CourseForm onSaved={() => setRefreshKey((value) => value + 1)} />
+      <CourseForm
+        key={editingCourse?.id ?? "new"}
+        course={editingCourse}
+        onSaved={() => {
+          setEditingCourse(null);
+          setRefreshKey((value) => value + 1);
+        }}
+        onCancel={() => setEditingCourse(null)}
+      />
 
       {deleteError && (
         <p role="alert" className="mb-4 text-red-600">
@@ -129,6 +142,17 @@ export default function CoursesPage() {
                   <td className="p-3">{course.level}</td>
                   <td className="p-3">{course.duration}</td>
                   <td className="p-3">
+                    <button
+                      type="button"
+                      disabled={deletingId !== null}
+                      onClick={() => {
+                        setEditingCourse(course);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="mr-2 rounded bg-blue-700 px-3 py-2 text-white disabled:opacity-50"
+                    >
+                      Edit
+                    </button>
                     <button
                       type="button"
                       disabled={deletingId !== null}
