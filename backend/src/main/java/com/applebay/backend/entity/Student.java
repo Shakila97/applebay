@@ -25,6 +25,11 @@ public class Student {
     @Column(nullable = false, length = 300)
     private String address;
 
+    @OneToOne
+    @JoinColumn(name = "user_id", unique = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private AppUser user;
+
     public Student() {
     }
 
@@ -74,5 +79,13 @@ public class Student {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public AppUser getUser() {
+        return user;
+    }
+
+    public void setUser(AppUser user) {
+        this.user = user;
     }
 }
