@@ -9,6 +9,7 @@ type Student = {
   email: string;
   phone: string;
   address: string;
+  registrationNumber?: string;
 };
 
 type Props = {
@@ -44,6 +45,8 @@ export default function StudentForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [savedRegistrationNumber, setSavedRegistrationNumber] =
+    useState<string | null>(null);
 
   function updateField(field: keyof typeof emptyForm, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -79,6 +82,12 @@ export default function StudentForm({
         );
       }
 
+      const savedStudent: Student = await response.json();
+
+      setSavedRegistrationNumber(
+        savedStudent.registrationNumber ?? null
+      );
+
       if (!student) {
         setForm(emptyForm);
         setMessage("Student registered successfully.");
@@ -98,6 +107,16 @@ export default function StudentForm({
 
   return (
     <form onSubmit={handleSubmit} className="mb-8 rounded border p-5">
+      <div className="mb-5 rounded border border-blue-200 bg-blue-50 p-4 text-blue-950">
+        <p className="text-sm font-medium">Registration number</p>
+
+        <p className="mt-1 text-xl font-bold">
+          {student?.registrationNumber ??
+            savedRegistrationNumber ??
+            "Generated after registration"}
+        </p>
+      </div>
+
       <h2 className="mb-4 text-xl font-semibold">
         {student ? "Edit student" : "Register student"}
       </h2>

@@ -32,6 +32,10 @@ public class Student {
         return id;
     }
 
+    public String getRegistrationNumber() {
+        return id == null ? null : String.format("STU-%06d", id);
+    }
+
     public String getName() {
         return name;
     }
