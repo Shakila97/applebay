@@ -47,4 +47,12 @@ public class AttendanceController {
 
         return attendanceService.getStudentSummary(studentId);
     }
+
+    @GetMapping("/courses/{courseId}")
+    public List<Attendance> getCourseAttendance(
+            @PathVariable Long courseId,
+            @RequestParam LocalDate date) {
+
+        return attendanceService.getCourseAttendance(courseId, date);
+    }
 }

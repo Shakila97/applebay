@@ -2,8 +2,19 @@
 
 import { useState, type FormEvent } from "react";
 
+type Student = {
+  id: number;
+  name: string;
+  nic: string;
+  email: string;
+  phone: string;
+  address: string;
+};
+
 type Props = {
+  student?: Student | null;
   onSaved: () => void;
+  onCancel: () => void;
 };
 
 const emptyForm = {
@@ -14,8 +25,22 @@ const emptyForm = {
   address: "",
 };
 
-export default function StudentForm({ onSaved }: Props) {
-  const [form, setForm] = useState(emptyForm);
+export default function StudentForm({
+  student,
+  onSaved,
+  onCancel,
+}: Props) {
+  const [form, setForm] = useState(
+    student
+      ? {
+          name: student.name,
+          nic: student.nic,
+          email: student.email,
+          phone: student.phone,
+          address: student.address,
+        }
+      : emptyForm
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -31,28 +56,34 @@ export default function StudentForm({ onSaved }: Props) {
     setMessage("");
 
     try {
-      const response = await fetch("/api/students", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          nic: form.nic.trim(),
-          email: form.email.trim(),
-          phone: form.phone.trim(),
-          address: form.address.trim(),
-        }),
-      });
+      const response = await fetch(
+        student ? `/api/students/${student.id}` : "/api/students",
+        {
+          method: student ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: form.name.trim(),
+            nic: form.nic.trim(),
+            email: form.email.trim(),
+            phone: form.phone.trim(),
+            address: form.address.trim(),
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(
-          "Could not register student. Check the details and use a unique NIC."
+          "Could not save student. Check the details and use a unique NIC."
         );
       }
 
-      setForm(emptyForm);
-      setMessage("Student registered successfully.");
+      if (!student) {
+        setForm(emptyForm);
+        setMessage("Student registered successfully.");
+      }
+
       onSaved();
     } catch (error) {
       setError(
@@ -67,7 +98,9 @@ export default function StudentForm({ onSaved }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="mb-8 rounded border p-5">
-      <h2 className="mb-4 text-xl font-semibold">Register student</h2>
+      <h2 className="mb-4 text-xl font-semibold">
+        {student ? "Edit student" : "Register student"}
+      </h2>
 
       <fieldset disabled={saving} className="space-y-4">
         <label className="block">
@@ -131,8 +164,22 @@ export default function StudentForm({ onSaved }: Props) {
           type="submit"
           className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Register student"}
+          {saving
+            ? "Saving..."
+            : student
+              ? "Update student"
+              : "Register student"}
         </button>
+
+        {student && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="ml-3 rounded border px-4 py-2"
+          >
+            Cancel
+          </button>
+        )}
       </fieldset>
 
       {error && (
@@ -148,4 +195,4 @@ export default function StudentForm({ onSaved }: Props) {
       )}
     </form>
   );
-}
+} 

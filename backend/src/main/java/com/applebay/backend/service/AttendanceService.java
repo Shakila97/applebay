@@ -68,6 +68,19 @@ public class AttendanceService {
                 .findByEnrolment_Student_IdOrderByAttendanceDateDesc(studentId);
     }
 
+    public List<Attendance> getCourseAttendance(
+            Long courseId, LocalDate date) {
+
+        if (courseId == null || date == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Course ID and date are required");
+        }
+
+        return attendanceRepository
+                .findByEnrolment_Course_IdAndAttendanceDate(courseId, date);
+    }
+
     public record AttendanceSummary(
             long present,
             long total,

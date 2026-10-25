@@ -21,6 +21,7 @@ export default function StudentsPage() {
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -84,6 +85,10 @@ export default function StudentsPage() {
         );
       }
 
+      if (editingStudent?.id === id) {
+        setEditingStudent(null);
+      }
+
       setStudents((current) =>
         current.filter((student) => student.id !== id)
       );
@@ -100,7 +105,15 @@ export default function StudentsPage() {
     <main className="mx-auto max-w-6xl p-6">
       <h1 className="mb-6 text-3xl font-bold">Students</h1>
 
-      <StudentForm onSaved={() => setRefreshKey((value) => value + 1)} />
+      <StudentForm
+        key={editingStudent?.id ?? "new"}
+        student={editingStudent}
+        onSaved={() => {
+          setEditingStudent(null);
+          setRefreshKey((value) => value + 1);
+        }}
+        onCancel={() => setEditingStudent(null)}
+      />
 
       <form
         onSubmit={handleSearch}
@@ -177,6 +190,17 @@ export default function StudentsPage() {
                   <td className="p-3">{student.phone}</td>
                   <td className="p-3">{student.address}</td>
                   <td className="p-3">
+                    <button
+                      type="button"
+                      disabled={deletingId !== null}
+                      onClick={() => {
+                        setEditingStudent(student);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="mr-2 rounded bg-blue-700 px-3 py-2 text-white disabled:opacity-50"
+                    >
+                      Edit
+                    </button>
                     <button
                       type="button"
                       disabled={deletingId !== null}
