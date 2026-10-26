@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { apiFetch } from "@/lib/apiFetch";
 
 type Course = {
   id: number;
@@ -36,7 +37,7 @@ export default function CourseForm({
     setMessage("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         course ? `/api/courses/${course.id}` : "/api/courses",
         {
           method: course ? "PUT" : "POST",
