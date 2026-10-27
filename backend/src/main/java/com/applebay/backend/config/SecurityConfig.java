@@ -48,6 +48,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/student/**")
                     .hasRole("STUDENT")
 
+                .requestMatchers("/api/lecturer/**")
+                    .hasRole("LECTURER")
+
                 // Existing management APIs are Admin-only.
                 .requestMatchers("/api/**")
                     .hasRole("ADMIN")

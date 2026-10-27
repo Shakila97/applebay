@@ -37,6 +37,16 @@ const modules = [
     description: "View student attendance records and percentages.",
     href: "/attendance/history",
   },
+  {
+    title: "Lecturers",
+    description: "Register lecturer accounts.",
+    href: "/admin/lecturers",
+  },
+  {
+    title: "Course lecturers",
+    description: "Assign lecturers to courses.",
+    href: "/admin/course-lecturers",
+  },
 ];
 
 export default function AdminDashboard() {
