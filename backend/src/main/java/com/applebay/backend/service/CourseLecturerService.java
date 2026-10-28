@@ -102,6 +102,17 @@ public class CourseLecturerService {
         }
     }
 
+    @Transactional
+    public void removeAssignment(Long assignmentId) {
+
+        var assignment = assignments.findById(assignmentId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Assignment not found"));
+
+        assignments.delete(assignment);
+    }
+
     private AssignmentView toView(CourseLecturer assignment) {
         return new AssignmentView(
                 assignment.getId(),

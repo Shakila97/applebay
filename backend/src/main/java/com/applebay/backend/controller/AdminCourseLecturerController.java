@@ -42,4 +42,12 @@ public class AdminCourseLecturerController {
                 request.courseId(),
                 request.lecturerId());
     }
+
+    @DeleteMapping("/course-lecturers/{assignmentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeAssignment(
+            @PathVariable Long assignmentId) {
+
+        service.removeAssignment(assignmentId);
+    }
 }

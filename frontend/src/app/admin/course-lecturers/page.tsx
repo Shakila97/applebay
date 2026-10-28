@@ -37,6 +37,7 @@ export default function CourseLecturersPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -133,6 +134,39 @@ export default function CourseLecturersPage() {
     }
   }
 
+  async function removeAssignment(id: number) {
+    if (!window.confirm("Remove this lecturer from this course?")) return;
+
+    setDeletingId(id);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await apiFetch(
+        `/api/admin/course-lecturers/${id}`,
+        { method: "DELETE" }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Could not remove the assignment. Check your Admin session."
+        );
+      }
+
+      setAssignments((current) =>
+        current.filter((assignment) => assignment.id !== id)
+      );
+
+      setMessage("Lecturer assignment removed.");
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Something went wrong."
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   const inputStyle = "mt-1 w-full rounded border p-2";
 
   return (
@@ -166,7 +200,12 @@ export default function CourseLecturersPage() {
             className="mb-8 rounded border p-5"
           >
             <fieldset
-              disabled={saving || courses.length === 0 || lecturers.length === 0}
+              disabled={
+                saving ||
+                deletingId !== null ||
+                courses.length === 0 ||
+                lecturers.length === 0
+              }
               className="space-y-4"
             >
               <label className="block">
@@ -233,6 +272,7 @@ export default function CourseLecturersPage() {
                   <tr className="border-b">
                     <th className="p-3">Course</th>
                     <th className="p-3">Lecturer</th>
+                    <th className="p-3">Actions</th>
                   </tr>
                 </thead>
 
@@ -241,6 +281,16 @@ export default function CourseLecturersPage() {
                     <tr key={assignment.id} className="border-b">
                       <td className="p-3">{assignment.courseName}</td>
                       <td className="p-3">{assignment.lecturerName}</td>
+                      <td className="p-3">
+                        <button
+                          type="button"
+                          disabled={saving || deletingId !== null}
+                          onClick={() => removeAssignment(assignment.id)}
+                          className="rounded bg-red-700 px-3 py-2 text-white disabled:opacity-50"
+                        >
+                          {deletingId === assignment.id ? "Removing..." : "Remove"}
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

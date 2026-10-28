@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import StudentForm from "./StudentForm";
+import { apiFetch } from "@/lib/apiFetch";
 
 type Student = {
   id: number;
@@ -75,7 +76,7 @@ export default function StudentsPage() {
     setDeleteError("");
 
     try {
-      const response = await fetch(`/api/students/${id}`, {
+      const response = await apiFetch(`/api/students/${id}`, {
         method: "DELETE",
       });
 

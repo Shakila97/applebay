@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { apiFetch } from "@/lib/apiFetch";
 
 type Student = {
   id: number;
@@ -88,7 +89,7 @@ export default function EnrolmentsPage() {
     setMessage("");
 
     try {
-      const response = await fetch("/api/enrolments", {
+      const response = await apiFetch("/api/enrolments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

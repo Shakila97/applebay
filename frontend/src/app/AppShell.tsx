@@ -22,6 +22,8 @@ const adminLinks = [
   { href: "/enrolments", label: "Enrolments" },
   { href: "/attendance", label: "Attendance" },
   { href: "/attendance/history", label: "Attendance History" },
+  { href: "/admin/lecturers", label: "Lecturers" },
+  { href: "/admin/course-lecturers", label: "Course Lecturers" },
 ];
 
 const studentLinks = [

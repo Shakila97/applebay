@@ -202,6 +202,15 @@ export default function StudentCoursesPage() {
                       ? "Enrolling..."
                       : "Enrol"}
                 </button>
+
+                {enrolled && (
+                  <Link
+                    href={`/student/courses/${course.id}/contents`}
+                    className="mt-4 block text-blue-600 underline"
+                  >
+                    View lessons
+                  </Link>
+                )}
               </section>
             );
           })}

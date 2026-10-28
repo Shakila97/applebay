@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import CourseForm from "./CourseForm";
 import { apiFetch } from "@/lib/apiFetch";
@@ -143,6 +144,12 @@ export default function CoursesPage() {
                   <td className="p-3">{course.level}</td>
                   <td className="p-3">{course.duration}</td>
                   <td className="p-3">
+                    <Link
+                      href={`/admin/courses/${course.id}/contents`}
+                      className="mr-2 inline-block rounded border px-3 py-2"
+                    >
+                      Content
+                    </Link>
                     <button
                       type="button"
                       disabled={deletingId !== null}
