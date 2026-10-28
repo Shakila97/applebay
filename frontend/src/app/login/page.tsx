@@ -3,6 +3,26 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { AlertCircleIcon } from "lucide-react";
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
 type CsrfResponse = {
   token: string;
@@ -95,67 +115,96 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md p-6">
-      <h1 className="mb-2 text-3xl font-bold">Log in</h1>
+    <main className="flex min-h-svh items-center justify-center bg-muted p-4 sm:p-6">
+      <div className="flex w-full max-w-sm flex-col gap-6">
+        <p className="text-center text-lg font-semibold">
+          Applebay Institute
+        </p>
 
-      <p className="mb-6">
-        Use your email or student registration number.
-      </p>
+        <Card>
+          <CardHeader>
+            <CardTitle>Log in</CardTitle>
+            <CardDescription>
+              Use your email or student registration number.
+            </CardDescription>
+          </CardHeader>
 
-      <form
-        onSubmit={handleLogin}
-        className="rounded border p-5"
-      >
-        <fieldset disabled={loading} className="space-y-4">
-          <label className="block">
-            Email or registration number
-            <input
-              required
-              type="text"
-              name="identifier"
-              autoComplete="username"
-              autoCapitalize="none"
-              spellCheck={false}
-              value={identifier}
-              onChange={(event) => setIdentifier(event.target.value)}
-              className="mt-1 w-full rounded border p-2"
-            />
-          </label>
+          <CardContent>
+            <form id="login-form" onSubmit={handleLogin} noValidate={false}>
+              <FieldGroup>
+                {error && (
+                  <Alert variant="destructive" aria-live="assertive">
+                    <AlertCircleIcon />
+                    <AlertTitle>Could not log in</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
 
-          <label className="block">
-            Password
-            <input
-              required
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="mt-1 w-full rounded border p-2"
-            />
-          </label>
+                <Field data-invalid={error ? true : undefined}>
+                  <FieldLabel htmlFor="identifier">
+                    Email or registration number
+                  </FieldLabel>
+                  <Input
+                    id="identifier"
+                    name="identifier"
+                    type="text"
+                    required
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    placeholder="you@example.com or STU-000001"
+                    disabled={loading}
+                    aria-invalid={error ? true : undefined}
+                    value={identifier}
+                    onChange={(event) => setIdentifier(event.target.value)}
+                  />
+                  <FieldDescription>
+                    Students can use the registration number shown on
+                    their dashboard.
+                  </FieldDescription>
+                </Field>
 
-          <button
-            type="submit"
-            className="w-full rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
-          >
-            {loading ? "Logging in..." : "Log in"}
-          </button>
-        </fieldset>
+                <Field data-invalid={error ? true : undefined}>
+                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    disabled={loading}
+                    aria-invalid={error ? true : undefined}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                  />
+                </Field>
+              </FieldGroup>
+            </form>
+          </CardContent>
 
-        {error && (
-          <p role="alert" className="mt-4 text-red-600">
-            {error}
-          </p>
-        )}
-      </form>
+          <CardFooter className="flex flex-col gap-4">
+            <Button
+              type="submit"
+              form="login-form"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading && <Spinner data-icon="inline-start" />}
+              {loading ? "Logging in..." : "Log in"}
+            </Button>
 
-      <p className="mt-4">
-        New student?{" "}
-        <Link href="/signup" className="text-blue-600 underline">
-          Create an account
-        </Link>
-      </p>
+            <p className="text-center text-sm text-muted-foreground">
+              New student?{" "}
+              <Link
+                href="/signup"
+                className="font-medium text-foreground underline underline-offset-4"
+              >
+                Create an account
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
     </main>
   );
 }
