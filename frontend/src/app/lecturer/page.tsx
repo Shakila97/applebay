@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -115,6 +116,13 @@ export default function LecturerDashboard() {
 
               <p className="mt-4">Level: {course.level}</p>
               <p>Duration: {course.duration}</p>
+
+              <Link
+                href={`/lecturer/courses/${course.id}/sessions`}
+                className="mt-4 inline-block rounded bg-blue-700 px-4 py-2 text-white"
+              >
+                Attendance sessions
+              </Link>
             </section>
           ))}
         </div>

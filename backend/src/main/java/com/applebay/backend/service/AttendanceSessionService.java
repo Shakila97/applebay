@@ -154,7 +154,7 @@ public class AttendanceSessionService {
     public SessionView closeSession(String email, Long sessionId) {
         Lecturer lecturer = getLecturer(email);
 
-        AttendanceSession session = sessions.findById(sessionId)
+        AttendanceSession session = sessions.findByIdForUpdate(sessionId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Session not found"));

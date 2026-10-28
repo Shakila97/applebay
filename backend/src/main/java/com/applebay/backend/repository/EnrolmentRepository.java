@@ -4,11 +4,15 @@ import com.applebay.backend.entity.Enrolment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface EnrolmentRepository
         extends JpaRepository<Enrolment, Long> {
 
     boolean existsByStudent_IdAndCourse_Id(
+            Long studentId, Long courseId);
+
+    Optional<Enrolment> findByStudent_IdAndCourse_Id(
             Long studentId, Long courseId);
 
     List<Enrolment> findByCourse_Id(Long courseId);
