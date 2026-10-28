@@ -19,7 +19,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
@@ -98,38 +100,63 @@ public class AttendanceSessionService {
     public SessionView openSession(
             String email,
             Long courseId,
-            int durationMinutes) {
+            LocalDate sessionDate,
+            LocalTime startTime,
+            LocalTime endTime) {
+
+        if (sessionDate == null || startTime == null || endTime == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Session date, start time and end time are required");
+        }
 
         Lecturer lecturer = getLecturer(email);
         checkAssignment(courseId, lecturer);
 
         Course course = courses.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Course not found"));
+                        HttpStatus.NOT_FOUND,
+                        "Course not found"));
 
-        Instant now = Instant.now();
+        if (!endTime.isAfter(startTime)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "End time must be after start time on the same day");
+        }
 
-        LocalDate today = now.atZone(
-                ZoneId.of("Asia/Colombo")).toLocalDate();
+        ZoneId sriLanka = ZoneId.of("Asia/Colombo");
+
+        Instant opensAt = ZonedDateTime.of(
+                sessionDate, startTime, sriLanka).toInstant();
+
+        Instant closesAt = ZonedDateTime.of(
+                sessionDate, endTime, sriLanka).toInstant();
+
+        if (!opensAt.isAfter(Instant.now())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Session start must be in the future");
+        }
 
         if (sessions.existsByCourse_IdAndSessionDate(
-                courseId, today)) {
+                courseId, sessionDate)) {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "A session already exists for this course today");
+                    "A session already exists for this course on this date");
         }
 
         AttendanceSession session = new AttendanceSession();
         session.setCourse(course);
         session.setLecturer(lecturer);
-        session.setSessionDate(today);
-        session.setOpensAt(now);
-        session.setClosesAt(now.plusSeconds(durationMinutes * 60L));
+        session.setSessionDate(sessionDate);
+        session.setOpensAt(opensAt);
+        session.setClosesAt(closesAt);
         session.setStatus(AttendanceSession.Status.OPEN);
 
         try {
             return toView(sessions.saveAndFlush(session));
+
         } catch (DataIntegrityViolationException exception) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,

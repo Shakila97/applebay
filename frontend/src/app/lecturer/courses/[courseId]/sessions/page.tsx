@@ -21,7 +21,9 @@ export default function LecturerSessionsPage() {
   const router = useRouter();
 
   const [sessions, setSessions] = useState<AttendanceSession[]>([]);
-  const [duration, setDuration] = useState("15");
+  const [sessionDate, setSessionDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [loading, setLoading] = useState(true);
@@ -86,9 +88,20 @@ export default function LecturerSessionsPage() {
 
   async function openSession(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSaving(true);
     setError("");
     setMessage("");
+
+    if (!sessionDate || !startTime || !endTime) {
+      setError("Select the session date, start time and end time.");
+      return;
+    }
+
+    if (endTime <= startTime) {
+      setError("End time must be after start time on the same day.");
+      return;
+    }
+
+    setSaving(true);
 
     try {
       const response = await apiFetch(
@@ -99,7 +112,9 @@ export default function LecturerSessionsPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            durationMinutes: Number(duration),
+            sessionDate,
+            startTime,
+            endTime,
           }),
         }
       );
@@ -115,16 +130,26 @@ export default function LecturerSessionsPage() {
 
       if (response.status === 409) {
         throw new Error(
-          "Could not create the session. One may already exist for this course today."
+          "Could not schedule the session. One may already exist on this date."
+        );
+      }
+
+      if (response.status === 400) {
+        throw new Error(
+          "Choose a future start time and an end time after it. All times are Sri Lanka time."
         );
       }
 
       if (!response.ok) {
-        throw new Error("Could not open the session.");
+        throw new Error("Could not schedule the session.");
       }
 
-      setMessage("Attendance session opened.");
+      setSessionDate("");
+      setStartTime("");
+      setEndTime("");
+      setMessage("Attendance session scheduled successfully.");
       setRefreshKey((value) => value + 1);
+
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Something went wrong."
@@ -171,6 +196,28 @@ export default function LecturerSessionsPage() {
     }
   }
 
+  function sessionLabel(session: AttendanceSession) {
+    if (session.status === "CLOSED") return "Closed";
+
+    const now = Date.now();
+
+    if (now < new Date(session.opensAt).getTime()) {
+      return "Scheduled";
+    }
+
+    if (now >= new Date(session.closesAt).getTime()) {
+      return "Expired";
+    }
+
+    return "Open";
+  }
+
+  function formatSriLankaTime(value: string) {
+    return new Date(value).toLocaleString("en-GB", {
+      timeZone: "Asia/Colombo",
+    });
+  }
+
   return (
     <main className="mx-auto max-w-5xl p-6">
       <Link href="/lecturer" className="text-blue-600 underline">
@@ -197,34 +244,58 @@ export default function LecturerSessionsPage() {
         onSubmit={openSession}
         className="mb-8 rounded border p-5"
       >
-        <h2 className="mb-4 text-xl font-semibold">
-          Open today’s session
+        <h2 className="mb-2 text-xl font-semibold">
+          Schedule attendance session
         </h2>
 
-        <label className="block">
-          Check-in duration in minutes
-          <input
-            required
-            type="number"
-            min="1"
-            max="240"
-            value={duration}
-            onChange={(event) => setDuration(event.target.value)}
-            disabled={saving}
-            className="mt-1 w-full rounded border p-2"
-          />
-        </label>
+        <p className="mb-4 text-sm">
+          All dates and times are Sri Lanka time.
+        </p>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="mt-4 rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
-        >
-          {saving ? "Saving..." : "Open session"}
-        </button>
+        <fieldset disabled={saving} className="space-y-4">
+          <label className="block">
+            Session date
+            <input
+              required
+              type="date"
+              value={sessionDate}
+              onChange={(event) => setSessionDate(event.target.value)}
+              className="mt-1 w-full rounded border p-2"
+            />
+          </label>
+
+          <label className="block">
+            Start time
+            <input
+              required
+              type="time"
+              value={startTime}
+              onChange={(event) => setStartTime(event.target.value)}
+              className="mt-1 w-full rounded border p-2"
+            />
+          </label>
+
+          <label className="block">
+            End time
+            <input
+              required
+              type="time"
+              value={endTime}
+              onChange={(event) => setEndTime(event.target.value)}
+              className="mt-1 w-full rounded border p-2"
+            />
+          </label>
+
+          <button
+            type="submit"
+            className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
+          >
+            {saving ? "Scheduling..." : "Schedule session"}
+          </button>
+        </fieldset>
 
         <p className="mt-3 text-sm">
-          One session can be created per course per day.
+          One session per course per day. Start and end must be on the same day.
         </p>
       </form>
 
@@ -243,15 +314,9 @@ export default function LecturerSessionsPage() {
               <h3 className="font-semibold">{session.courseName}</h3>
 
               <p>Date: {session.sessionDate}</p>
-              <p>Status: {session.status}</p>
-
-              <p>
-                Opens: {new Date(session.opensAt).toLocaleString()}
-              </p>
-
-              <p>
-                Closes: {new Date(session.closesAt).toLocaleString()}
-              </p>
+              <p>Status: {sessionLabel(session)}</p>
+              <p>Opens: {formatSriLankaTime(session.opensAt)}</p>
+              <p>Closes: {formatSriLankaTime(session.closesAt)}</p>
 
               <Link
                 href={`/lecturer/sessions/${session.id}/attendance`}

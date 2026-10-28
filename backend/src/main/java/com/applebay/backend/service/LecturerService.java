@@ -40,6 +40,44 @@ public class LecturerService {
             String email) {
     }
 
+    @Transactional(readOnly = true)
+    public LecturerResponse getLecturer(Long lecturerId) {
+
+        Lecturer lecturer = lecturers.findById(lecturerId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Lecturer not found"));
+
+        return new LecturerResponse(
+                lecturer.getId(),
+                lecturer.getName(),
+                lecturer.getPhone(),
+                lecturer.getUser().getEmail());
+    }
+
+    @Transactional
+    public LecturerResponse updateLecturer(
+            Long lecturerId,
+            String name,
+            String phone) {
+
+        Lecturer lecturer = lecturers.findById(lecturerId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Lecturer not found"));
+
+        lecturer.setName(name.trim());
+        lecturer.setPhone(phone.trim());
+
+        Lecturer saved = lecturers.save(lecturer);
+
+        return new LecturerResponse(
+                saved.getId(),
+                saved.getName(),
+                saved.getPhone(),
+                saved.getUser().getEmail());
+    }
+
     @Transactional
     public LecturerResponse register(
             LecturerRegistrationRequest request) {
