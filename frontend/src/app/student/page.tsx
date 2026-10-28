@@ -125,6 +125,13 @@ export default function StudentDashboard() {
           >
             View my attendance
           </Link>
+
+          <Link
+            href="/student/check-in"
+            className="mt-4 inline-block rounded border px-4 py-2"
+          >
+            Mark my attendance
+          </Link>
         </section>
       )}
     </main>

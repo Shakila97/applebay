@@ -123,6 +123,13 @@ export default function LecturerDashboard() {
               >
                 Attendance sessions
               </Link>
+
+              <Link
+                href={`/lecturer/courses/${course.id}/report`}
+                className="mt-4 ml-3 inline-block rounded border px-4 py-2"
+              >
+                Attendance report
+              </Link>
             </section>
           ))}
         </div>

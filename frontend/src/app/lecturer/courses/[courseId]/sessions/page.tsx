@@ -253,6 +253,13 @@ export default function LecturerSessionsPage() {
                 Closes: {new Date(session.closesAt).toLocaleString()}
               </p>
 
+              <Link
+                href={`/lecturer/sessions/${session.id}/attendance`}
+                className="mt-4 mr-3 inline-block rounded bg-blue-700 px-4 py-2 text-white"
+              >
+                View and mark students
+              </Link>
+
               {session.status === "OPEN" && (
                 <button
                   type="button"
