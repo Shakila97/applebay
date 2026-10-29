@@ -1,10 +1,32 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { apiFetch } from "@/lib/apiFetch";
+
+import { RefreshCwIcon } from "lucide-react";
+
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  StatusBadge,
+  SuccessAlert,
+} from "@/components/page";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 
 type OpenSession = {
   sessionId: number;
@@ -144,83 +166,75 @@ export default function StudentCheckInPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <Link href="/student" className="text-blue-600 underline">
-        Back to dashboard
-      </Link>
+    <PageShell>
+      <PageHeader
+        backHref="/student"
+        title="Attendance check-in"
+        description="Open sessions for the courses you are enrolled in."
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setRefreshKey((value) => value + 1)}
+            disabled={loading || savingId !== null}
+          >
+            <RefreshCwIcon data-icon="inline-start" />
+            Refresh sessions
+          </Button>
+        }
+      />
 
-      <h1 className="my-6 text-3xl font-bold">
-        Attendance check-in
-      </h1>
-
-      <button
-        type="button"
-        onClick={() => setRefreshKey((value) => value + 1)}
-        disabled={loading || savingId !== null}
-        className="mb-6 rounded border px-4 py-2 disabled:opacity-50"
-      >
-        Refresh sessions
-      </button>
-
-      {error && (
-        <p role="alert" className="mb-4 text-red-600">
-          {error}
-        </p>
-      )}
-
-      {message && (
-        <p role="status" className="mb-4 text-green-700">
-          {message}
-        </p>
-      )}
+      <ErrorAlert message={error} />
+      <SuccessAlert message={message} />
 
       {loading ? (
-        <p role="status">Loading open sessions...</p>
+        <LoadingState label="Loading open sessions..." rows={2} />
       ) : sessions.length === 0 && !error ? (
-        <p>No open attendance sessions are available.</p>
+        <EmptyState
+          title="No open attendance sessions"
+          description="Sessions appear here while your lecturer has check-in open."
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {sessions.map((session) => (
-            <section
-              key={session.sessionId}
-              className="rounded border p-5"
-            >
-              <h2 className="text-xl font-semibold">
-                {session.courseName}
-              </h2>
-
-              <p className="mt-3">Date: {session.sessionDate}</p>
-
-              <p>
-                Closes: {new Date(session.closesAt).toLocaleString()}
-              </p>
-
-              <p className="mt-2">
-                Attendance: {session.attendanceStatus}
-              </p>
+            <Card key={session.sessionId}>
+              <CardHeader>
+                <CardTitle>{session.courseName}</CardTitle>
+                <CardDescription>
+                  {session.sessionDate} · Closes{" "}
+                  {new Date(session.closesAt).toLocaleString()}
+                </CardDescription>
+                <CardAction>
+                  <StatusBadge status={session.attendanceStatus} />
+                </CardAction>
+              </CardHeader>
 
               {session.attendanceStatus === "Unmarked" && (
-                <button
-                  type="button"
-                  disabled={savingId !== null}
-                  onClick={() => checkIn(session.sessionId)}
-                  className="mt-4 rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
-                >
-                  {savingId === session.sessionId
-                    ? "Saving..."
-                    : "Mark my attendance"}
-                </button>
+                <CardFooter>
+                  <Button
+                    type="button"
+                    disabled={savingId !== null}
+                    onClick={() => checkIn(session.sessionId)}
+                  >
+                    {savingId === session.sessionId && (
+                      <Spinner data-icon="inline-start" />
+                    )}
+                    {savingId === session.sessionId
+                      ? "Saving..."
+                      : "Mark my attendance"}
+                  </Button>
+                </CardFooter>
               )}
 
               {session.attendanceStatus === "Absent" && (
-                <p className="mt-3 text-sm">
+                <CardContent className="text-sm text-muted-foreground">
                   Contact your lecturer if this mark needs correcting.
-                </p>
+                </CardContent>
               )}
-            </section>
+            </Card>
           ))}
         </div>
       )}
-    </main>
+    </PageShell>
   );
 }

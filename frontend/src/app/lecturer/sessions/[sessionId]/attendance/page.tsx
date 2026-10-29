@@ -1,10 +1,30 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { apiFetch } from "@/lib/apiFetch";
+
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  StatusBadge,
+  SuccessAlert,
+} from "@/components/page";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type AttendanceStatus = "Present" | "Absent";
 
@@ -134,92 +154,82 @@ export default function LecturerAttendancePage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <Link href="/lecturer" className="text-blue-600 underline">
-        Back to dashboard
-      </Link>
+    <PageShell>
+      <PageHeader
+        backHref="/lecturer"
+        title="Student attendance"
+        description="Each button saves immediately. You can correct marks after the session closes."
+      />
 
-      <h1 className="my-6 text-3xl font-bold">
-        Student attendance
-      </h1>
-
-      <p className="mb-4">
-        Each button saves immediately. You can correct marks after
-        the session closes.
-      </p>
-
-      {error && (
-        <p role="alert" className="mb-4 text-red-600">
-          {error}
-        </p>
-      )}
-
-      {message && (
-        <p role="status" className="mb-4 text-green-700">
-          {message}
-        </p>
-      )}
+      <ErrorAlert message={error} />
+      <SuccessAlert message={message} />
 
       {loading ? (
-        <p role="status">Loading students...</p>
+        <LoadingState label="Loading students..." />
       ) : rows.length === 0 && !error ? (
-        <p>No students are enrolled in this course.</p>
+        <EmptyState title="No students are enrolled in this course" />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b">
-                <th className="p-3">Student</th>
-                <th className="p-3">NIC</th>
-                <th className="p-3">Saved status</th>
-                <th className="p-3">Mark attendance</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.enrolmentId} className="border-b">
-                  <td className="p-3">{row.studentName}</td>
-                  <td className="p-3">{row.nic}</td>
-                  <td className="p-3">{row.status}</td>
-
-                  <td className="p-3">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        disabled={savingId !== null}
-                        onClick={() =>
-                          markAttendance(row.enrolmentId, "Present")
-                        }
-                        className="rounded bg-green-700 px-3 py-2 text-white disabled:opacity-50"
-                      >
-                        Present
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={savingId !== null}
-                        onClick={() =>
-                          markAttendance(row.enrolmentId, "Absent")
-                        }
-                        className="rounded bg-red-700 px-3 py-2 text-white disabled:opacity-50"
-                      >
-                        Absent
-                      </button>
-                    </div>
-
-                    {savingId === row.enrolmentId && (
-                      <p role="status" className="mt-2 text-sm">
-                        Saving...
-                      </p>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>NIC</TableHead>
+                  <TableHead>Saved status</TableHead>
+                  <TableHead className="text-right">Mark attendance</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row) => (
+                  <TableRow key={row.enrolmentId}>
+                    <TableCell className="font-medium">
+                      {row.studentName}
+                    </TableCell>
+                    <TableCell className="font-mono">{row.nic}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={row.status} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-2">
+                        {savingId === row.enrolmentId && (
+                          <Spinner aria-label="Saving" />
+                        )}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={
+                            row.status === "Present" ? "default" : "outline"
+                          }
+                          disabled={savingId !== null}
+                          onClick={() =>
+                            markAttendance(row.enrolmentId, "Present")
+                          }
+                        >
+                          Present
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={
+                            row.status === "Absent" ? "destructive" : "outline"
+                          }
+                          disabled={savingId !== null}
+                          onClick={() =>
+                            markAttendance(row.enrolmentId, "Absent")
+                          }
+                        >
+                          Absent
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
-    </main>
+    </PageShell>
   );
 }

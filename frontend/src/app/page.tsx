@@ -1,4 +1,14 @@
 import Link from "next/link";
+import { ArrowRightIcon } from "lucide-react";
+
+import { PageHeader, PageShell } from "@/components/page";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const modules = [
   {
@@ -30,34 +40,32 @@ const modules = [
 
 export default function HomePage() {
   return (
-    <main className="mx-auto max-w-6xl p-6">
-      <h1 className="mb-3 text-3xl font-bold">
-        Applebay Institute
-      </h1>
-
-      <p className="mb-8">
-        Manage courses, students, enrolments and attendance.
-      </p>
+    <PageShell width="xl">
+      <PageHeader
+        title="Applebay Institute"
+        description="Manage courses, students, enrolments and attendance."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {modules.map((module) => (
           <Link
             key={module.href}
             href={module.href}
-            className="rounded-lg border p-6 transition-colors hover:border-blue-600"
+            className="rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
-            <h2 className="mb-2 text-xl font-semibold">
-              {module.title}
-            </h2>
-
-            <p>{module.description}</p>
-
-            <p className="mt-4 font-semibold text-blue-600">
-              Open module →
-            </p>
+            <Card className="h-full transition-colors hover:bg-muted/50">
+              <CardHeader>
+                <CardTitle>{module.title}</CardTitle>
+                <CardDescription>{module.description}</CardDescription>
+              </CardHeader>
+              <CardFooter className="text-sm font-medium">
+                Open module
+                <ArrowRightIcon className="ml-1 size-4" />
+              </CardFooter>
+            </Card>
           </Link>
         ))}
       </div>
-    </main>
+    </PageShell>
   );
 }

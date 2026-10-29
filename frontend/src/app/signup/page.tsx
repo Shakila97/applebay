@@ -3,6 +3,28 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
+import { AlertCircleIcon } from "lucide-react";
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
+
 type CsrfResponse = {
   token: string;
   headerName: string;
@@ -82,100 +104,124 @@ export default function SignupPage() {
     }
   }
 
-  const inputStyle = "mt-1 w-full rounded border p-2";
 
   return (
-    <main className="mx-auto max-w-md p-6">
-      <h1 className="mb-3 text-3xl font-bold">
-        Create a Student account
-      </h1>
+    <main className="flex min-h-svh items-center justify-center bg-muted p-4 sm:p-6">
+      <div className="flex w-full max-w-sm flex-col gap-6">
+        <p className="text-center text-lg font-semibold">
+          Applebay Institute
+        </p>
 
-      {registered ? (
-        <section className="rounded border p-5">
-          <p role="status" className="mb-4 text-green-700">
-            Account created successfully. Log in to complete your
-            student profile and receive your registration number.
-          </p>
+        {registered ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Account created</CardTitle>
+              <CardDescription role="status">
+                Log in to complete your student profile and receive your
+                registration number.
+              </CardDescription>
+            </CardHeader>
+            <CardFooter>
+              <Link href="/login" className={cn(buttonVariants(), "w-full")}>
+                Go to login
+              </Link>
+            </CardFooter>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Create a Student account</CardTitle>
+              <CardDescription>
+                You will add your student details after logging in.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form id="signup-form" onSubmit={handleSignup}>
+                <FieldGroup>
+                  {error && (
+                    <Alert variant="destructive" aria-live="assertive">
+                      <AlertCircleIcon />
+                      <AlertTitle>Could not create account</AlertTitle>
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
 
-          <Link
-            href="/login"
-            className="inline-block rounded bg-blue-700 px-4 py-2 text-white"
-          >
-            Go to login
-          </Link>
-        </section>
-      ) : (
-        <form
-          onSubmit={handleSignup}
-          className="rounded border p-5"
-        >
-          <fieldset disabled={saving} className="space-y-4">
-            <label className="block">
-              Email
-              <input
-                required
-                type="email"
-                maxLength={150}
-                autoComplete="email"
-                autoCapitalize="none"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className={inputStyle}
-              />
-            </label>
+                  <Field>
+                    <FieldLabel htmlFor="email">Email</FieldLabel>
+                    <Input
+                      id="email"
+                      required
+                      type="email"
+                      maxLength={150}
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      placeholder="you@example.com"
+                      disabled={saving}
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                    />
+                  </Field>
 
-            <label className="block">
-              Password
-              <input
-                required
-                type="password"
-                minLength={8}
-                maxLength={72}
-                autoComplete="new-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className={inputStyle}
-              />
-            </label>
+                  <Field>
+                    <FieldLabel htmlFor="password">Password</FieldLabel>
+                    <Input
+                      id="password"
+                      required
+                      type="password"
+                      minLength={8}
+                      maxLength={72}
+                      autoComplete="new-password"
+                      disabled={saving}
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                    />
+                    <FieldDescription>At least 8 characters.</FieldDescription>
+                  </Field>
 
-            <label className="block">
-              Confirm password
-              <input
-                required
-                type="password"
-                minLength={8}
-                maxLength={72}
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(event) =>
-                  setConfirmPassword(event.target.value)
-                }
-                className={inputStyle}
-              />
-            </label>
-
-            <button
-              type="submit"
-              className="w-full rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
-            >
-              {saving ? "Creating account..." : "Create account"}
-            </button>
-          </fieldset>
-
-          {error && (
-            <p role="alert" className="mt-4 text-red-600">
-              {error}
-            </p>
-          )}
-
-          <p className="mt-4">
-            Already have an account?{" "}
-            <Link href="/login" className="text-blue-600 underline">
-              Log in
-            </Link>
-          </p>
-        </form>
-      )}
+                  <Field>
+                    <FieldLabel htmlFor="confirm-password">
+                      Confirm password
+                    </FieldLabel>
+                    <Input
+                      id="confirm-password"
+                      required
+                      type="password"
+                      minLength={8}
+                      maxLength={72}
+                      autoComplete="new-password"
+                      disabled={saving}
+                      value={confirmPassword}
+                      onChange={(event) =>
+                        setConfirmPassword(event.target.value)
+                      }
+                    />
+                  </Field>
+                </FieldGroup>
+              </form>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <Button
+                type="submit"
+                form="signup-form"
+                className="w-full"
+                disabled={saving}
+              >
+                {saving && <Spinner data-icon="inline-start" />}
+                {saving ? "Creating account..." : "Create account"}
+              </Button>
+              <p className="text-center text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link
+                  href="/login"
+                  className="font-medium text-foreground underline underline-offset-4"
+                >
+                  Log in
+                </Link>
+              </p>
+            </CardFooter>
+          </Card>
+        )}
+      </div>
     </main>
   );
 }

@@ -5,6 +5,28 @@ import { useEffect, useState } from "react";
 import CourseForm from "./CourseForm";
 import { apiFetch } from "@/lib/apiFetch";
 
+import { PencilIcon, Trash2Icon } from "lucide-react";
+
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+} from "@/components/page";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 type Course = {
   id: number;
   code: string;
@@ -26,6 +48,9 @@ export default function CoursesPage() {
     const controller = new AbortController();
 
     async function loadCourses() {
+      setLoading(true);
+      setError("");
+
       try {
         const response = await fetch("/api/courses", {
           signal: controller.signal,
@@ -50,8 +75,6 @@ export default function CoursesPage() {
         }
       }
     }
-    setLoading(true);
-    setError("");
 
     loadCourses();
 
@@ -92,8 +115,8 @@ export default function CoursesPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-6 text-3xl font-bold">Courses</h1>
+    <PageShell>
+      <PageHeader title="Courses" />
 
       <CourseForm
         key={editingCourse?.id ?? "new"}
@@ -105,77 +128,87 @@ export default function CoursesPage() {
         onCancel={() => setEditingCourse(null)}
       />
 
-      {deleteError && (
-        <p role="alert" className="mb-4 text-red-600">
-          {deleteError}
-        </p>
-      )}
+      <ErrorAlert message={deleteError} title="Could not delete course" />
 
-      {loading && <p role="status">Loading courses...</p>}
+      {loading && <LoadingState label="Loading courses..." />}
 
-      {error && (
-        <p role="alert" className="text-red-600">
-          {error}
-        </p>
-      )}
+      <ErrorAlert message={error} />
 
       {!loading && !error && courses.length === 0 && (
-        <p>No courses found.</p>
+        <EmptyState title="No courses found" />
       )}
 
       {!loading && !error && courses.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b">
-                <th className="p-3">Code</th>
-                <th className="p-3">Name</th>
-                <th className="p-3">Level</th>
-                <th className="p-3">Duration</th>
-                <th className="p-3">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {courses.map((course) => (
-                <tr key={course.id} className="border-b">
-                  <td className="p-3">{course.code}</td>
-                  <td className="p-3">{course.name}</td>
-                  <td className="p-3">{course.level}</td>
-                  <td className="p-3">{course.duration}</td>
-                  <td className="p-3">
-                    <Link
-                      href={`/admin/courses/${course.id}/contents`}
-                      className="mr-2 inline-block rounded border px-3 py-2"
-                    >
-                      Content
-                    </Link>
-                    <button
-                      type="button"
-                      disabled={deletingId !== null}
-                      onClick={() => {
-                        setEditingCourse(course);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
-                      className="mr-2 rounded bg-blue-700 px-3 py-2 text-white disabled:opacity-50"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      disabled={deletingId !== null}
-                      onClick={() => deleteCourse(course.id)}
-                      className="rounded bg-red-700 px-3 py-2 text-white disabled:opacity-50"
-                    >
-                      {deletingId === course.id ? "Deleting..." : "Delete"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Level</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {courses.map((course) => (
+                  <TableRow key={course.id}>
+                    <TableCell className="font-mono">{course.code}</TableCell>
+                    <TableCell className="font-medium">
+                      {course.name}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{course.level}</Badge>
+                    </TableCell>
+                    <TableCell>{course.duration}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Link
+                          href={`/admin/courses/${course.id}/contents`}
+                          className={buttonVariants({
+                            variant: "outline",
+                            size: "sm",
+                          })}
+                        >
+                          Content
+                        </Link>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={deletingId !== null}
+                          onClick={() => {
+                            setEditingCourse(course);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                        >
+                          <PencilIcon data-icon="inline-start" />
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          disabled={deletingId !== null}
+                          onClick={() => deleteCourse(course.id)}
+                        >
+                          {deletingId === course.id ? (
+                            <Spinner data-icon="inline-start" />
+                          ) : (
+                            <Trash2Icon data-icon="inline-start" />
+                          )}
+                          {deletingId === course.id ? "Deleting..." : "Delete"}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
-    </main>
+    </PageShell>
   );
 }

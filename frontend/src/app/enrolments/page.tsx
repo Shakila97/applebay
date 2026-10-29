@@ -3,6 +3,35 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "@/lib/apiFetch";
 
+import { OptionSelect } from "@/components/option-select";
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  SuccessAlert,
+} from "@/components/page";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 type Student = {
   id: number;
   name: string;
@@ -123,128 +152,113 @@ export default function EnrolmentsPage() {
     }
   }
 
-  const inputStyle = "mt-1 w-full rounded border p-2";
+
+  const formDisabled = saving || !students.length || !courses.length;
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-6 text-3xl font-bold">Enrolments</h1>
+    <PageShell>
+      <PageHeader title="Enrolments" />
 
-      {error && (
-        <p role="alert" className="mb-4 text-red-600">
-          {error}
-        </p>
-      )}
-
-      {message && (
-        <p role="status" className="mb-4 text-green-700">
-          {message}
-        </p>
-      )}
+      <ErrorAlert message={error} />
+      <SuccessAlert message={message} />
 
       {loading ? (
-        <p role="status">Loading...</p>
+        <LoadingState />
       ) : (
         <>
-          <form
-            onSubmit={handleSubmit}
-            className="mb-8 rounded border p-5"
-          >
-            <h2 className="mb-4 text-xl font-semibold">
-              Enrol a student
-            </h2>
-
-            <fieldset
-              disabled={saving || !students.length || !courses.length}
-              className="space-y-4"
-            >
-              <label className="block">
-                Student
-                <select
-                  required
-                  value={studentId}
-                  onChange={(event) => setStudentId(event.target.value)}
-                  className={inputStyle}
-                >
-                  <option value="">Choose a student</option>
-
-                  {students.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.name} — {student.nic}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                Course
-                <select
-                  required
-                  value={courseId}
-                  onChange={(event) => setCourseId(event.target.value)}
-                  className={inputStyle}
-                >
-                  <option value="">Choose a course</option>
-
-                  {courses.map((course) => (
-                    <option key={course.id} value={course.id}>
-                      {course.code} — {course.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <button
+          <Card>
+            <CardHeader>
+              <CardTitle>Enrol a student</CardTitle>
+              {(!students.length || !courses.length) && (
+                <CardDescription>
+                  Add at least one student and one course first.
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent>
+              <form id="enrol-form" onSubmit={handleSubmit}>
+                <FieldGroup className="grid gap-4 sm:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor="enrol-student">Student</FieldLabel>
+                    <OptionSelect
+                      id="enrol-student"
+                      required
+                      placeholder="Choose a student"
+                      disabled={formDisabled}
+                      value={studentId}
+                      onChange={setStudentId}
+                      options={students.map((student) => ({
+                        value: String(student.id),
+                        label: `${student.name} — ${student.nic}`,
+                      }))}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="enrol-course">Course</FieldLabel>
+                    <OptionSelect
+                      id="enrol-course"
+                      required
+                      placeholder="Choose a course"
+                      disabled={formDisabled}
+                      value={courseId}
+                      onChange={setCourseId}
+                      options={courses.map((course) => ({
+                        value: String(course.id),
+                        label: `${course.code} — ${course.name}`,
+                      }))}
+                    />
+                  </Field>
+                </FieldGroup>
+              </form>
+            </CardContent>
+            <CardFooter>
+              <Button
                 type="submit"
-                className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
+                form="enrol-form"
+                disabled={formDisabled || !studentId || !courseId}
               >
+                {saving && <Spinner data-icon="inline-start" />}
                 {saving ? "Saving..." : "Enrol student"}
-              </button>
-            </fieldset>
+              </Button>
+            </CardFooter>
+          </Card>
 
-            {(!students.length || !courses.length) && (
-              <p className="mt-3">
-                Add at least one student and one course first.
-              </p>
-            )}
-          </form>
-
-          <h2 className="mb-4 text-xl font-semibold">
-            Saved enrolments
-          </h2>
+          <h2 className="text-lg font-semibold">Saved enrolments</h2>
 
           {enrolments.length === 0 ? (
-            <p>No enrolments found.</p>
+            <EmptyState title="No enrolments found" />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b">
-                    <th className="p-3">Student</th>
-                    <th className="p-3">NIC</th>
-                    <th className="p-3">Course</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {enrolments.map((enrolment) => (
-                    <tr key={enrolment.id} className="border-b">
-                      <td className="p-3">
-                        {enrolment.student.name}
-                      </td>
-                      <td className="p-3">
-                        {enrolment.student.nic}
-                      </td>
-                      <td className="p-3">
-                        {enrolment.course.code} — {enrolment.course.name}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Card>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Student</TableHead>
+                      <TableHead>NIC</TableHead>
+                      <TableHead>Course</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {enrolments.map((enrolment) => (
+                      <TableRow key={enrolment.id}>
+                        <TableCell className="font-medium">
+                          {enrolment.student.name}
+                        </TableCell>
+                        <TableCell className="font-mono">
+                          {enrolment.student.nic}
+                        </TableCell>
+                        <TableCell>
+                          {enrolment.course.code} — {enrolment.course.name}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           )}
         </>
       )}
-    </main>
+    </PageShell>
   );
 }

@@ -2,6 +2,35 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 
+import { OptionSelect } from "@/components/option-select";
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  StatusBadge,
+} from "@/components/page";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 type Student = {
   id: number;
   name: string;
@@ -105,117 +134,114 @@ export default function AttendanceHistoryPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-6 text-3xl font-bold">
-        Student attendance history
-      </h1>
+    <PageShell>
+      <PageHeader title="Student attendance history" />
 
-      {error && (
-        <p role="alert" className="mb-4 text-red-600">
-          {error}
-        </p>
-      )}
+      <ErrorAlert message={error} />
 
       {loadingStudents ? (
-        <p role="status">Loading students...</p>
+        <LoadingState label="Loading students..." rows={1} />
       ) : (
-        <form
-          onSubmit={loadHistory}
-          className="mb-8 rounded border p-5"
-        >
-          <fieldset
-            disabled={loading || students.length === 0}
-            className="space-y-4"
-          >
-            <label className="block">
-              Student
-              <select
-                required
-                value={studentId}
-                onChange={(event) => {
-                  setStudentId(event.target.value);
-                  setSummary(null);
-                  setRecords([]);
-                  setError("");
-                }}
-                className="mt-1 w-full rounded border p-2"
-              >
-                <option value="">Choose a student</option>
-
-                {students.map((student) => (
-                  <option key={student.id} value={student.id}>
-                    {student.name} — {student.nic}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <button
+        <Card>
+          <CardHeader>
+            <CardTitle>Choose a student</CardTitle>
+            {students.length === 0 && (
+              <CardDescription>Register a student first.</CardDescription>
+            )}
+          </CardHeader>
+          <CardContent>
+            <form id="history-form" onSubmit={loadHistory}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="history-student">Student</FieldLabel>
+                  <OptionSelect
+                    id="history-student"
+                    required
+                    placeholder="Choose a student"
+                    disabled={loading || students.length === 0}
+                    value={studentId}
+                    onChange={(value) => {
+                      setStudentId(value);
+                      setSummary(null);
+                      setRecords([]);
+                      setError("");
+                    }}
+                    options={students.map((student) => ({
+                      value: String(student.id),
+                      label: `${student.name} — ${student.nic}`,
+                    }))}
+                  />
+                </Field>
+              </FieldGroup>
+            </form>
+          </CardContent>
+          <CardFooter>
+            <Button
               type="submit"
-              className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
+              form="history-form"
+              disabled={loading || students.length === 0 || !studentId}
             >
+              {loading && <Spinner data-icon="inline-start" />}
               {loading ? "Loading..." : "View attendance"}
-            </button>
-          </fieldset>
-
-          {students.length === 0 && (
-            <p className="mt-3">Register a student first.</p>
-          )}
-        </form>
+            </Button>
+          </CardFooter>
+        </Card>
       )}
 
       {summary && (
         <>
-          <section className="mb-6 rounded border p-5">
-            <h2 className="text-xl font-semibold">
-              Attendance percentage
-            </h2>
-
-            <p className="my-3 text-3xl font-bold">
-              {summary.percentage === null
-                ? "No records"
-                : `${summary.percentage}%`}
-            </p>
-
-            <p>
-              Present: {summary.present} / Recorded: {summary.total}
-            </p>
-
-            <p className="mt-2 text-sm">
-              Calculated across all courses. Unmarked dates are excluded.
-            </p>
-          </section>
+          <Card>
+            <CardHeader>
+              <CardDescription>Attendance percentage</CardDescription>
+              <CardTitle className="text-3xl">
+                {summary.percentage === null
+                  ? "No records"
+                  : `${summary.percentage}%`}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              <p>
+                Present: {summary.present} / Recorded: {summary.total}
+              </p>
+              <p>
+                Calculated across all courses. Unmarked dates are excluded.
+              </p>
+            </CardContent>
+          </Card>
 
           {records.length === 0 ? (
-            <p>No attendance records found.</p>
+            <EmptyState title="No attendance records found" />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b">
-                    <th className="p-3">Date</th>
-                    <th className="p-3">Course</th>
-                    <th className="p-3">Status</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {records.map((record) => (
-                    <tr key={record.id} className="border-b">
-                      <td className="p-3">{record.attendanceDate}</td>
-                      <td className="p-3">
-                        {record.enrolment.course.code} —{" "}
-                        {record.enrolment.course.name}
-                      </td>
-                      <td className="p-3">{record.status}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Card>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Course</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {records.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell>{record.attendanceDate}</TableCell>
+                        <TableCell>
+                          {record.enrolment.course.code} —{" "}
+                          {record.enrolment.course.name}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={record.status} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           )}
         </>
       )}
-    </main>
+    </PageShell>
   );
 }

@@ -1,8 +1,31 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+} from "@/components/page";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type StudentReport = {
   studentId: number;
@@ -86,82 +109,72 @@ export default function LecturerReportPage() {
   }, [courseId, router]);
 
   return (
-    <main className="mx-auto max-w-6xl p-6">
-      <Link href="/lecturer" className="text-blue-600 underline">
-        Back to dashboard
-      </Link>
+    <PageShell width="xl">
+      <PageHeader backHref="/lecturer" title="Course attendance report" />
 
-      <h1 className="my-6 text-3xl font-bold">
-        Course attendance report
-      </h1>
+      {loading && <LoadingState label="Loading report..." />}
 
-      {loading && <p role="status">Loading report...</p>}
-
-      {error && (
-        <p role="alert" className="text-red-600">
-          {error}
-        </p>
-      )}
+      <ErrorAlert message={error} />
 
       {!loading && !error && report && (
         <>
-          <section className="mb-6 rounded border p-5">
-            <h2 className="text-xl font-semibold">
-              {report.courseName}
-            </h2>
-
-            <p className="mt-2">
-              Enrolled students: {report.enrolledStudents}
-            </p>
-
-            <p className="mt-2 text-sm">
-              Percentage is based on recorded attendance only.
-              Unmarked dates are excluded.
-            </p>
-          </section>
+          <Card>
+            <CardHeader>
+              <CardTitle>{report.courseName}</CardTitle>
+              <CardDescription>
+                Enrolled students: {report.enrolledStudents}. Percentage is
+                based on recorded attendance only; unmarked dates are
+                excluded.
+              </CardDescription>
+            </CardHeader>
+          </Card>
 
           {report.students.length === 0 ? (
-            <p>No students are enrolled in this course.</p>
+            <EmptyState title="No students are enrolled in this course" />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b">
-                    <th className="p-3">Reg. No.</th>
-                    <th className="p-3">Student</th>
-                    <th className="p-3">Present</th>
-                    <th className="p-3">Recorded</th>
-                    <th className="p-3">Percentage</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {report.students.map((student) => (
-                    <tr key={student.studentId} className="border-b">
-                      <td className="p-3">
-                        {student.registrationNumber}
-                      </td>
-
-                      <td className="p-3">
-                        {student.studentName}
-                      </td>
-
-                      <td className="p-3">{student.present}</td>
-                      <td className="p-3">{student.total}</td>
-
-                      <td className="p-3">
-                        {student.percentage === null
-                          ? "No records"
-                          : `${student.percentage}%`}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Card>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Reg. No.</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead className="text-right">Present</TableHead>
+                      <TableHead className="text-right">Recorded</TableHead>
+                      <TableHead className="text-right">Percentage</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {report.students.map((student) => (
+                      <TableRow key={student.studentId}>
+                        <TableCell className="font-mono">
+                          {student.registrationNumber}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {student.studentName}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {student.present}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {student.total}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {student.percentage === null ? (
+                            <Badge variant="outline">No records</Badge>
+                          ) : (
+                            `${student.percentage}%`
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           )}
         </>
       )}
-    </main>
+    </PageShell>
   );
 }

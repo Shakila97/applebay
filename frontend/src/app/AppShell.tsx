@@ -5,6 +5,11 @@ import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import LogoutButton from "./LogoutButton";
 
+import { EmptyState, ErrorAlert, PageShell } from "@/components/page";
+import { buttonVariants } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
+
 type Account = {
   email: string;
   roles: string[];
@@ -151,17 +156,31 @@ export default function AppShell({
 
   if (failure?.path === pathname) {
     return (
-      <main className="mx-auto max-w-xl p-6">
-        <p role="alert">{failure.message}</p>
-        <Link href="/login" className="mt-4 inline-block underline">
+      <PageShell width="sm">
+        <ErrorAlert
+          title="Could not open this page"
+          message={failure.message}
+        />
+        <Link
+          href="/login"
+          className={cn(buttonVariants({ variant: "outline" }), "self-start")}
+        >
           Go to login
         </Link>
-      </main>
+      </PageShell>
     );
   }
 
   if (pathname === "/" || result?.path !== pathname) {
-    return <p className="p-6" role="status">Checking access...</p>;
+    return (
+      <div
+        role="status"
+        className="flex flex-1 items-center justify-center gap-2 p-6 text-muted-foreground"
+      >
+        <Spinner />
+        Checking access...
+      </div>
+    );
   }
 
   const account = result.account;
@@ -169,15 +188,16 @@ export default function AppShell({
 
   if (!canAccess(pathname, account)) {
     return (
-      <main className="mx-auto max-w-xl p-6">
-        <h1 className="text-2xl font-bold">Access denied</h1>
-        <p className="my-4">
-          Your account does not have permission to open this page.
-        </p>
-        <Link href={dashboard} className="text-blue-600 underline">
-          Go to my dashboard
-        </Link>
-      </main>
+      <PageShell width="sm">
+        <EmptyState
+          title="Access denied"
+          description="Your account does not have permission to open this page."
+        >
+          <Link href={dashboard} className={buttonVariants()}>
+            Go to my dashboard
+          </Link>
+        </EmptyState>
+      </PageShell>
     );
   }
 
@@ -189,19 +209,21 @@ export default function AppShell({
 
   return (
     <>
-      <header className="border-b">
-        <div className="mx-auto max-w-6xl p-6">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xl font-bold">Applebay Institute</p>
-              <p className="text-sm">{account.email}</p>
+      <header className="border-b bg-background">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-col">
+              <p className="text-lg font-semibold">Applebay Institute</p>
+              <p className="text-sm text-muted-foreground">
+                {account.email}
+              </p>
             </div>
             <LogoutButton />
           </div>
 
           <nav
             aria-label="Main navigation"
-            className="flex flex-wrap gap-2"
+            className="flex flex-wrap gap-1"
           >
             {links.map((link) => (
               <Link
@@ -210,11 +232,10 @@ export default function AppShell({
                 aria-current={
                   pathname === link.href ? "page" : undefined
                 }
-                className={
-                  pathname === link.href
-                    ? "rounded bg-blue-700 px-3 py-2 text-white"
-                    : "rounded border px-3 py-2"
-                }
+                className={buttonVariants({
+                  variant: pathname === link.href ? "secondary" : "ghost",
+                  size: "sm",
+                })}
               >
                 {link.label}
               </Link>

@@ -6,6 +6,29 @@ import { useParams, useRouter } from "next/navigation";
 
 import { apiFetch } from "@/lib/apiFetch";
 
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  StatusBadge,
+  SuccessAlert,
+} from "@/components/page";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+
 type AttendanceSession = {
   id: number;
   courseId: number;
@@ -30,6 +53,13 @@ export default function LecturerSessionsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [now, setNow] = useState(() => Date.now());
+
+  // Re-evaluate Open / Expired labels as time passes.
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -199,8 +229,6 @@ export default function LecturerSessionsPage() {
   function sessionLabel(session: AttendanceSession) {
     if (session.status === "CLOSED") return "Closed";
 
-    const now = Date.now();
-
     if (now < new Date(session.opensAt).getTime()) {
       return "Scheduled";
     }
@@ -219,126 +247,116 @@ export default function LecturerSessionsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <Link href="/lecturer" className="text-blue-600 underline">
-        Back to dashboard
-      </Link>
+    <PageShell>
+      <PageHeader backHref="/lecturer" title="Attendance sessions" />
 
-      <h1 className="my-6 text-3xl font-bold">
-        Attendance sessions
-      </h1>
+      <ErrorAlert message={error} />
+      <SuccessAlert message={message} />
 
-      {error && (
-        <p role="alert" className="mb-4 text-red-600">
-          {error}
-        </p>
-      )}
-
-      {message && (
-        <p role="status" className="mb-4 text-green-700">
-          {message}
-        </p>
-      )}
-
-      <form
-        onSubmit={openSession}
-        className="mb-8 rounded border p-5"
-      >
-        <h2 className="mb-2 text-xl font-semibold">
-          Schedule attendance session
-        </h2>
-
-        <p className="mb-4 text-sm">
-          All dates and times are Sri Lanka time.
-        </p>
-
-        <fieldset disabled={saving} className="space-y-4">
-          <label className="block">
-            Session date
-            <input
-              required
-              type="date"
-              value={sessionDate}
-              onChange={(event) => setSessionDate(event.target.value)}
-              className="mt-1 w-full rounded border p-2"
-            />
-          </label>
-
-          <label className="block">
-            Start time
-            <input
-              required
-              type="time"
-              value={startTime}
-              onChange={(event) => setStartTime(event.target.value)}
-              className="mt-1 w-full rounded border p-2"
-            />
-          </label>
-
-          <label className="block">
-            End time
-            <input
-              required
-              type="time"
-              value={endTime}
-              onChange={(event) => setEndTime(event.target.value)}
-              className="mt-1 w-full rounded border p-2"
-            />
-          </label>
-
-          <button
-            type="submit"
-            className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
-          >
+      <Card>
+        <CardHeader>
+          <CardTitle>Schedule attendance session</CardTitle>
+          <CardDescription>
+            All dates and times are Sri Lanka time.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form id="session-form" onSubmit={openSession}>
+            <FieldGroup className="grid gap-4 sm:grid-cols-3">
+              <Field>
+                <FieldLabel htmlFor="session-date">Session date</FieldLabel>
+                <Input
+                  id="session-date"
+                  required
+                  type="date"
+                  disabled={saving}
+                  value={sessionDate}
+                  onChange={(event) => setSessionDate(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="start-time">Start time</FieldLabel>
+                <Input
+                  id="start-time"
+                  required
+                  type="time"
+                  disabled={saving}
+                  value={startTime}
+                  onChange={(event) => setStartTime(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="end-time">End time</FieldLabel>
+                <Input
+                  id="end-time"
+                  required
+                  type="time"
+                  disabled={saving}
+                  value={endTime}
+                  onChange={(event) => setEndTime(event.target.value)}
+                />
+              </Field>
+            </FieldGroup>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            One session per course per day. Start and end must be on the same
+            day.
+          </p>
+          <Button type="submit" form="session-form" disabled={saving}>
+            {saving && <Spinner data-icon="inline-start" />}
             {saving ? "Scheduling..." : "Schedule session"}
-          </button>
-        </fieldset>
+          </Button>
+        </CardFooter>
+      </Card>
 
-        <p className="mt-3 text-sm">
-          One session per course per day. Start and end must be on the same day.
-        </p>
-      </form>
-
-      <h2 className="mb-4 text-xl font-semibold">
-        Saved sessions
-      </h2>
+      <h2 className="text-lg font-semibold">Saved sessions</h2>
 
       {loading ? (
-        <p role="status">Loading sessions...</p>
+        <LoadingState label="Loading sessions..." rows={2} />
       ) : sessions.length === 0 ? (
-        <p>No sessions have been created for this course.</p>
+        <EmptyState
+          title="No sessions yet"
+          description="Schedule a session above to start taking attendance."
+        />
       ) : (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {sessions.map((session) => (
-            <section key={session.id} className="rounded border p-5">
-              <h3 className="font-semibold">{session.courseName}</h3>
-
-              <p>Date: {session.sessionDate}</p>
-              <p>Status: {sessionLabel(session)}</p>
-              <p>Opens: {formatSriLankaTime(session.opensAt)}</p>
-              <p>Closes: {formatSriLankaTime(session.closesAt)}</p>
-
-              <Link
-                href={`/lecturer/sessions/${session.id}/attendance`}
-                className="mt-4 mr-3 inline-block rounded bg-blue-700 px-4 py-2 text-white"
-              >
-                View and mark students
-              </Link>
-
-              {session.status === "OPEN" && (
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={() => closeSession(session.id)}
-                  className="mt-4 rounded border px-4 py-2 disabled:opacity-50"
+            <Card key={session.id}>
+              <CardHeader>
+                <CardTitle>{session.sessionDate}</CardTitle>
+                <CardDescription>{session.courseName}</CardDescription>
+                <CardAction>
+                  <StatusBadge status={sessionLabel(session)} />
+                </CardAction>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                <p>Opens: {formatSriLankaTime(session.opensAt)}</p>
+                <p>Closes: {formatSriLankaTime(session.closesAt)}</p>
+              </CardContent>
+              <CardFooter className="flex flex-wrap gap-2">
+                <Link
+                  href={`/lecturer/sessions/${session.id}/attendance`}
+                  className={buttonVariants()}
                 >
-                  Close session
-                </button>
-              )}
-            </section>
+                  View and mark students
+                </Link>
+                {session.status === "OPEN" && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={saving}
+                    onClick={() => closeSession(session.id)}
+                  >
+                    Close session
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
           ))}
         </div>
       )}
-    </main>
+    </PageShell>
   );
 }

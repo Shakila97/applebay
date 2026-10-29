@@ -4,7 +4,22 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import LogoutButton from "../LogoutButton";
+
+import { ArrowRightIcon } from "lucide-react";
+
+import {
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+} from "@/components/page";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 type Account = {
   email: string;
@@ -102,45 +117,38 @@ export default function AdminDashboard() {
   }, [router]);
 
   return (
-    <main className="mx-auto max-w-6xl p-6">
-      <h1 className="mb-6 text-3xl font-bold">Admin dashboard</h1>
+    <PageShell width="xl">
+      <PageHeader
+        title="Admin dashboard"
+        description={account ? `Signed in as ${account.email}` : undefined}
+      />
 
-      {loading && <p role="status">Checking your account...</p>}
+      {loading && <LoadingState label="Checking your account..." rows={1} />}
 
-      {error && (
-        <p role="alert" className="text-red-600">
-          {error}
-        </p>
-      )}
+      <ErrorAlert message={error} />
 
       {!loading && !error && account && (
-        <>
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-            <p>Signed in as {account.email}</p>
-            <LogoutButton />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {modules.map((module) => (
-              <Link
-                key={module.href}
-                href={module.href}
-                className="rounded border p-5 hover:border-blue-600"
-              >
-                <h2 className="mb-2 text-xl font-semibold">
-                  {module.title}
-                </h2>
-
-                <p>{module.description}</p>
-
-                <p className="mt-4 font-semibold text-blue-600">
-                  Open module →
-                </p>
-              </Link>
-            ))}
-          </div>
-        </>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {modules.map((module) => (
+            <Link
+              key={module.href}
+              href={module.href}
+              className="rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <Card className="h-full transition-colors hover:bg-muted/50">
+                <CardHeader>
+                  <CardTitle>{module.title}</CardTitle>
+                  <CardDescription>{module.description}</CardDescription>
+                </CardHeader>
+                <CardFooter className="text-sm font-medium">
+                  Open module
+                  <ArrowRightIcon className="ml-1 size-4" />
+                </CardFooter>
+              </Card>
+            </Link>
+          ))}
+        </div>
       )}
-    </main>
+    </PageShell>
   );
 }

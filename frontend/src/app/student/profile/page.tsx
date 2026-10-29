@@ -3,6 +3,24 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+} from "@/components/page";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+
 type CsrfResponse = {
   token: string;
   headerName: string;
@@ -131,103 +149,100 @@ export default function StudentProfilePage() {
     }
   }
 
-  const inputStyle = "mt-1 w-full rounded border p-2";
-
   return (
-    <main className="mx-auto max-w-xl p-6">
-      <h1 className="mb-3 text-3xl font-bold">
-        Complete your student profile
-      </h1>
+    <PageShell width="sm">
+      <PageHeader
+        title="Complete your student profile"
+        description="Your registration number will be generated after saving. Your email comes from your login account."
+      />
 
-      <p className="mb-6">
-        Your registration number will be generated after saving.
-        Your email comes from your login account.
-      </p>
+      {checking && <LoadingState label="Checking your account..." rows={1} />}
 
-      {checking && <p role="status">Checking your account...</p>}
-
-      {error && (
-        <p role="alert" className="mb-4 text-red-600">
-          {error}
-        </p>
-      )}
+      <ErrorAlert message={error} />
 
       {!checking && canCreate && (
-        <form
-          onSubmit={handleSubmit}
-          className="rounded border p-5"
-        >
-          <fieldset disabled={saving} className="space-y-4">
-            <label className="block">
-              Name
-              <input
-                required
-                maxLength={120}
-                autoComplete="name"
-                value={form.name}
-                onChange={(event) =>
-                  setForm({ ...form, name: event.target.value })
-                }
-                className={inputStyle}
-              />
-            </label>
+        <Card>
+          <CardContent>
+            <form id="profile-form" onSubmit={handleSubmit}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="name">Name</FieldLabel>
+                  <Input
+                    id="name"
+                    required
+                    maxLength={120}
+                    autoComplete="name"
+                    disabled={saving}
+                    value={form.name}
+                    onChange={(event) =>
+                      setForm({ ...form, name: event.target.value })
+                    }
+                  />
+                </Field>
 
-            <label className="block">
-              NIC
-              <input
-                required
-                maxLength={12}
-                pattern="([0-9]{9}[VvXx]|[0-9]{12})"
-                title="Enter 9 digits followed by V/X, or 12 digits"
-                value={form.nic}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    nic: event.target.value.toUpperCase(),
-                  })
-                }
-                className={inputStyle}
-              />
-            </label>
+                <Field>
+                  <FieldLabel htmlFor="nic">NIC</FieldLabel>
+                  <Input
+                    id="nic"
+                    required
+                    maxLength={12}
+                    pattern="([0-9]{9}[VvXx]|[0-9]{12})"
+                    title="Enter 9 digits followed by V/X, or 12 digits"
+                    disabled={saving}
+                    value={form.nic}
+                    onChange={(event) =>
+                      setForm({
+                        ...form,
+                        nic: event.target.value.toUpperCase(),
+                      })
+                    }
+                  />
+                  <FieldDescription>
+                    9 digits followed by V or X, or 12 digits.
+                  </FieldDescription>
+                </Field>
 
-            <label className="block">
-              Phone
-              <input
-                required
-                type="tel"
-                maxLength={30}
-                autoComplete="tel"
-                value={form.phone}
-                onChange={(event) =>
-                  setForm({ ...form, phone: event.target.value })
-                }
-                className={inputStyle}
-              />
-            </label>
+                <Field>
+                  <FieldLabel htmlFor="phone">Phone</FieldLabel>
+                  <Input
+                    id="phone"
+                    required
+                    type="tel"
+                    maxLength={30}
+                    autoComplete="tel"
+                    disabled={saving}
+                    value={form.phone}
+                    onChange={(event) =>
+                      setForm({ ...form, phone: event.target.value })
+                    }
+                  />
+                </Field>
 
-            <label className="block">
-              Address
-              <textarea
-                required
-                maxLength={300}
-                autoComplete="street-address"
-                value={form.address}
-                onChange={(event) =>
-                  setForm({ ...form, address: event.target.value })
-                }
-                className={inputStyle}
-              />
-            </label>
-
-            <button
-              type="submit"
-              className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
-            >
+                <Field>
+                  <FieldLabel htmlFor="address">Address</FieldLabel>
+                  <Textarea
+                    id="address"
+                    required
+                    maxLength={300}
+                    autoComplete="street-address"
+                    disabled={saving}
+                    value={form.address}
+                    onChange={(event) =>
+                      setForm({ ...form, address: event.target.value })
+                    }
+                  />
+                </Field>
+              </FieldGroup>
+            </form>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" form="profile-form" disabled={saving}>
+              {saving && <Spinner data-icon="inline-start" />}
               {saving ? "Saving..." : "Complete registration"}
-            </button>
-          </fieldset>
-        </form>
+            </Button>
+          </CardFooter>
+        </Card>
       )}
-    </main>
+    </PageShell>
   );
 }

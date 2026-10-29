@@ -1,9 +1,46 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { apiFetch } from "@/lib/apiFetch";
+
+import { Trash2Icon } from "lucide-react";
+
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  SuccessAlert,
+} from "@/components/page";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Course = {
   id: number;
@@ -167,138 +204,162 @@ export default function CourseLecturersPage() {
     }
   }
 
-  const inputStyle = "mt-1 w-full rounded border p-2";
+
+  const formDisabled =
+    saving ||
+    deletingId !== null ||
+    courses.length === 0 ||
+    lecturers.length === 0;
+
+  const courseItems = [
+    { label: "Choose a course", value: null },
+    ...courses.map((course) => ({
+      label: `${course.code} — ${course.name}`,
+      value: String(course.id),
+    })),
+  ];
+
+  const lecturerItems = [
+    { label: "Choose a lecturer", value: null },
+    ...lecturers.map((lecturer) => ({
+      label: `${lecturer.name} — ${lecturer.email}`,
+      value: String(lecturer.id),
+    })),
+  ];
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <Link href="/admin" className="text-blue-600 underline">
-        Back to dashboard
-      </Link>
+    <PageShell>
+      <PageHeader backHref="/admin" title="Assign lecturers to courses" />
 
-      <h1 className="my-6 text-3xl font-bold">
-        Assign lecturers to courses
-      </h1>
-
-      {error && (
-        <p role="alert" className="mb-4 text-red-600">
-          {error}
-        </p>
-      )}
-
-      {message && (
-        <p role="status" className="mb-4 text-green-700">
-          {message}
-        </p>
-      )}
+      <ErrorAlert message={error} />
+      <SuccessAlert message={message} />
 
       {loading ? (
-        <p role="status">Loading...</p>
+        <LoadingState />
       ) : (
         <>
-          <form
-            onSubmit={handleAssign}
-            className="mb-8 rounded border p-5"
-          >
-            <fieldset
-              disabled={
-                saving ||
-                deletingId !== null ||
-                courses.length === 0 ||
-                lecturers.length === 0
-              }
-              className="space-y-4"
-            >
-              <label className="block">
-                Course
-                <select
-                  required
-                  value={courseId}
-                  onChange={(event) => setCourseId(event.target.value)}
-                  className={inputStyle}
-                >
-                  <option value="">Choose a course</option>
-
-                  {courses.map((course) => (
-                    <option key={course.id} value={course.id}>
-                      {course.code} — {course.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                Lecturer
-                <select
-                  required
-                  value={lecturerId}
-                  onChange={(event) => setLecturerId(event.target.value)}
-                  className={inputStyle}
-                >
-                  <option value="">Choose a lecturer</option>
-
-                  {lecturers.map((lecturer) => (
-                    <option key={lecturer.id} value={lecturer.id}>
-                      {lecturer.name} — {lecturer.email}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <button
+          <Card>
+            <CardHeader>
+              <CardTitle>New assignment</CardTitle>
+              {(courses.length === 0 || lecturers.length === 0) && (
+                <CardDescription>
+                  Create at least one course and register one lecturer first.
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent>
+              <form id="assign-form" onSubmit={handleAssign}>
+                <FieldGroup className="grid gap-4 sm:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor="course">Course</FieldLabel>
+                    <Select
+                      required
+                      items={courseItems}
+                      disabled={formDisabled}
+                      value={courseId || null}
+                      onValueChange={(value) => setCourseId(value ?? "")}
+                    >
+                      <SelectTrigger id="course" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {courseItems.map((item) => (
+                            <SelectItem key={item.value} value={item.value}>
+                              {item.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="lecturer">Lecturer</FieldLabel>
+                    <Select
+                      required
+                      items={lecturerItems}
+                      disabled={formDisabled}
+                      value={lecturerId || null}
+                      onValueChange={(value) => setLecturerId(value ?? "")}
+                    >
+                      <SelectTrigger id="lecturer" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {lecturerItems.map((item) => (
+                            <SelectItem key={item.value} value={item.value}>
+                              {item.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </FieldGroup>
+              </form>
+            </CardContent>
+            <CardFooter>
+              <Button
                 type="submit"
-                className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
+                form="assign-form"
+                disabled={formDisabled || !courseId || !lecturerId}
               >
+                {saving && <Spinner data-icon="inline-start" />}
                 {saving ? "Saving..." : "Assign lecturer"}
-              </button>
-            </fieldset>
+              </Button>
+            </CardFooter>
+          </Card>
 
-            {(courses.length === 0 || lecturers.length === 0) && (
-              <p className="mt-3">
-                Create at least one course and register one lecturer first.
-              </p>
-            )}
-          </form>
-
-          <h2 className="mb-4 text-xl font-semibold">
-            Current assignments
-          </h2>
+          <h2 className="text-lg font-semibold">Current assignments</h2>
 
           {assignments.length === 0 ? (
-            <p>No lecturers assigned yet.</p>
+            <EmptyState title="No lecturers assigned yet" />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b">
-                    <th className="p-3">Course</th>
-                    <th className="p-3">Lecturer</th>
-                    <th className="p-3">Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {assignments.map((assignment) => (
-                    <tr key={assignment.id} className="border-b">
-                      <td className="p-3">{assignment.courseName}</td>
-                      <td className="p-3">{assignment.lecturerName}</td>
-                      <td className="p-3">
-                        <button
-                          type="button"
-                          disabled={saving || deletingId !== null}
-                          onClick={() => removeAssignment(assignment.id)}
-                          className="rounded bg-red-700 px-3 py-2 text-white disabled:opacity-50"
-                        >
-                          {deletingId === assignment.id ? "Removing..." : "Remove"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Card>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Course</TableHead>
+                      <TableHead>Lecturer</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {assignments.map((assignment) => (
+                      <TableRow key={assignment.id}>
+                        <TableCell className="font-medium">
+                          {assignment.courseName}
+                        </TableCell>
+                        <TableCell>{assignment.lecturerName}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            disabled={saving || deletingId !== null}
+                            onClick={() => removeAssignment(assignment.id)}
+                          >
+                            {deletingId === assignment.id ? (
+                              <Spinner data-icon="inline-start" />
+                            ) : (
+                              <Trash2Icon data-icon="inline-start" />
+                            )}
+                            {deletingId === assignment.id
+                              ? "Removing..."
+                              : "Remove"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           )}
         </>
       )}
-    </main>
+    </PageShell>
   );
 }

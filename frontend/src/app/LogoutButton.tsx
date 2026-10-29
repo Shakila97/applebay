@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { LogOutIcon } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 type CsrfResponse = {
   token: string;
@@ -50,18 +54,23 @@ export default function LogoutButton() {
   }
 
   return (
-    <div>
-      <button
+    <div className="flex flex-col items-end gap-1">
+      <Button
         type="button"
+        variant="outline"
         disabled={loading}
         onClick={handleLogout}
-        className="rounded border px-4 py-2 disabled:opacity-50"
       >
+        {loading ? (
+          <Spinner data-icon="inline-start" />
+        ) : (
+          <LogOutIcon data-icon="inline-start" />
+        )}
         {loading ? "Logging out..." : "Log out"}
-      </button>
+      </Button>
 
       {error && (
-        <p role="alert" className="mt-2 text-red-600">
+        <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}

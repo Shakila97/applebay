@@ -3,6 +3,27 @@
 import { useState, type FormEvent } from "react";
 import { apiFetch } from "@/lib/apiFetch";
 
+import { ErrorAlert, SuccessAlert } from "@/components/page";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+
 type Course = {
   id: number;
   code: string;
@@ -77,98 +98,100 @@ export default function CourseForm({
     }
   }
 
-  const inputStyle = "mt-1 w-full rounded border p-2";
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="mb-8 rounded border p-5"
-    >
-      <h2 className="mb-4 text-xl font-semibold">
-        {course ? "Edit course" : "Add course"}
-      </h2>
+    <Card>
+      <CardHeader>
+        <CardTitle>{course ? "Edit course" : "Add course"}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form id="course-form" onSubmit={handleSubmit}>
+          <FieldGroup>
+            <ErrorAlert message={error} title="Could not save course" />
+            <SuccessAlert message={message} />
 
-      <fieldset disabled={saving} className="space-y-4">
-        <label className="block">
-          Course code
-          <input
-            required
-            maxLength={30}
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            className={inputStyle}
-          />
-        </label>
-
-        <label className="block">
-          Course name
-          <input
-            required
-            maxLength={120}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            className={inputStyle}
-          />
-        </label>
-
-        <label className="block">
-          Level
-          <select
-            value={level}
-            onChange={(event) => setLevel(event.target.value)}
-            className={inputStyle}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="course-code">Course code</FieldLabel>
+                <Input
+                  id="course-code"
+                  required
+                  maxLength={30}
+                  disabled={saving}
+                  value={code}
+                  onChange={(event) => setCode(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="course-name">Course name</FieldLabel>
+                <Input
+                  id="course-name"
+                  required
+                  maxLength={120}
+                  disabled={saving}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="course-level">Level</FieldLabel>
+                <Select
+                  items={levelItems}
+                  disabled={saving}
+                  value={level}
+                  onValueChange={(value) => setLevel(value ?? "HND")}
+                >
+                  <SelectTrigger id="course-level" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {levelItems.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="course-duration">Duration</FieldLabel>
+                <Input
+                  id="course-duration"
+                  required
+                  maxLength={60}
+                  placeholder="e.g. 2 years"
+                  disabled={saving}
+                  value={duration}
+                  onChange={(event) => setDuration(event.target.value)}
+                />
+              </Field>
+            </div>
+          </FieldGroup>
+        </form>
+      </CardContent>
+      <CardFooter className="flex gap-2">
+        <Button type="submit" form="course-form" disabled={saving}>
+          {saving && <Spinner data-icon="inline-start" />}
+          {saving ? "Saving..." : course ? "Update course" : "Save course"}
+        </Button>
+        {course && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={saving}
+            onClick={onCancel}
           >
-            <option value="HND">HND</option>
-            <option value="Certificate">Certificate</option>
-          </select>
-        </label>
-
-        <label className="block">
-          Duration
-          <input
-            required
-            maxLength={60}
-            value={duration}
-            onChange={(event) => setDuration(event.target.value)}
-            className={inputStyle}
-          />
-        </label>
-
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            className="rounded bg-blue-700 px-4 py-2 text-white"
-          >
-            {saving
-              ? "Saving..."
-              : course
-                ? "Update course"
-                : "Save course"}
-          </button>
-
-          {course && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="rounded border px-4 py-2"
-            >
-              Cancel
-            </button>
-          )}
-        </div>
-      </fieldset>
-
-      {error && (
-        <p role="alert" className="mt-3 text-red-600">
-          {error}
-        </p>
-      )}
-
-      {message && (
-        <p role="status" className="mt-3 text-green-700">
-          {message}
-        </p>
-      )}
-    </form>
+            Cancel
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
   );
 }
+
+const levelItems = [
+  { label: "HND", value: "HND" },
+  { label: "Certificate", value: "Certificate" },
+];

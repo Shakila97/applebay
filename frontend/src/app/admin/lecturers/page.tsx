@@ -1,8 +1,24 @@
 "use client";
 
-import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { apiFetch } from "@/lib/apiFetch";
+
+import {
+  ErrorAlert,
+  PageHeader,
+  PageShell,
+  SuccessAlert,
+} from "@/components/page";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
 const emptyForm = {
   name: "",
@@ -86,91 +102,92 @@ export default function LecturersPage() {
     }
   }
 
-  const inputStyle = "mt-1 w-full rounded border p-2";
 
   return (
-    <main className="mx-auto max-w-xl p-6">
-      <Link href="/admin" className="text-blue-600 underline">
-        Back to dashboard
-      </Link>
+    <PageShell width="sm">
+      <PageHeader backHref="/admin" title="Register lecturer" />
 
-      <h1 className="my-6 text-3xl font-bold">
-        Register lecturer
-      </h1>
+      <ErrorAlert message={error} />
+      <SuccessAlert
+        message={
+          savedLecturer
+            ? `Lecturer registered: ${savedLecturer.name} — ${savedLecturer.email}`
+            : ""
+        }
+      />
 
-      {error && (
-        <p role="alert" className="mb-4 text-red-600">
-          {error}
-        </p>
-      )}
-
-      {savedLecturer && (
-        <div role="status" className="mb-4 rounded border p-4 text-green-700">
-          Lecturer registered: {savedLecturer.name} — {savedLecturer.email}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="rounded border p-5">
-        <fieldset disabled={saving} className="space-y-4">
-          <label className="block">
-            Name
-            <input
-              required
-              maxLength={120}
-              value={form.name}
-              onChange={(event) => updateField("name", event.target.value)}
-              className={inputStyle}
-            />
-          </label>
-
-          <label className="block">
-            Phone
-            <input
-              required
-              type="tel"
-              maxLength={30}
-              value={form.phone}
-              onChange={(event) => updateField("phone", event.target.value)}
-              className={inputStyle}
-            />
-          </label>
-
-          <label className="block">
-            Email
-            <input
-              required
-              type="email"
-              maxLength={150}
-              value={form.email}
-              onChange={(event) => updateField("email", event.target.value)}
-              className={inputStyle}
-            />
-          </label>
-
-          <label className="block">
-            Initial password
-            <input
-              required
-              type="password"
-              minLength={8}
-              maxLength={72}
-              autoComplete="new-password"
-              value={form.password}
-              onChange={(event) =>
-                updateField("password", event.target.value)
-              }
-              className={inputStyle}
-            />
-          </label>
-
-          <button
-            type="submit"
-            className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
-          >
+      <Card>
+        <CardContent>
+          <form id="lecturer-form" onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="name">Name</FieldLabel>
+                <Input
+                  id="name"
+                  required
+                  maxLength={120}
+                  disabled={saving}
+                  value={form.name}
+                  onChange={(event) => updateField("name", event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="phone">Phone</FieldLabel>
+                <Input
+                  id="phone"
+                  required
+                  type="tel"
+                  maxLength={30}
+                  disabled={saving}
+                  value={form.phone}
+                  onChange={(event) =>
+                    updateField("phone", event.target.value)
+                  }
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <Input
+                  id="email"
+                  required
+                  type="email"
+                  maxLength={150}
+                  disabled={saving}
+                  value={form.email}
+                  onChange={(event) =>
+                    updateField("email", event.target.value)
+                  }
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="password">Initial password</FieldLabel>
+                <Input
+                  id="password"
+                  required
+                  type="password"
+                  minLength={8}
+                  maxLength={72}
+                  autoComplete="new-password"
+                  disabled={saving}
+                  value={form.password}
+                  onChange={(event) =>
+                    updateField("password", event.target.value)
+                  }
+                />
+                <FieldDescription>
+                  At least 8 characters. Share it with the lecturer securely.
+                </FieldDescription>
+              </Field>
+            </FieldGroup>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <Button type="submit" form="lecturer-form" disabled={saving}>
+            {saving && <Spinner data-icon="inline-start" />}
             {saving ? "Saving..." : "Register lecturer"}
-          </button>
-        </fieldset>
-      </form>
-    </main>
+          </Button>
+        </CardFooter>
+      </Card>
+    </PageShell>
   );
 }

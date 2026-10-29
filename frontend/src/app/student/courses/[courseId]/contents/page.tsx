@@ -1,8 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+} from "@/components/page";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 type Lesson = {
   id: number;
@@ -83,53 +97,43 @@ export default function StudentContentsPage() {
   }, [courseId, router]);
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
-      <Link
-        href="/student/courses"
-        className="text-blue-600 underline"
-      >
-        Back to courses
-      </Link>
+    <PageShell width="md">
+      <PageHeader
+        backHref="/student/courses"
+        backLabel="Back to courses"
+        title="Course lessons"
+      />
 
-      <h1 className="my-6 text-3xl font-bold">
-        Course lessons
-      </h1>
+      {loading && <LoadingState label="Loading lessons..." />}
 
-      {loading && <p role="status">Loading lessons...</p>}
-
-      {error && (
-        <p role="alert" className="text-red-600">
-          {error}
-        </p>
-      )}
+      <ErrorAlert message={error} />
 
       {!loading && !error && lessons.length === 0 && (
-        <p>Your lecturer has not added any lessons yet.</p>
+        <EmptyState
+          title="No lessons yet"
+          description="Your lecturer has not added any lessons yet."
+        />
       )}
 
       {!loading && !error && lessons.length > 0 && (
-        <div className="space-y-5">
+        <div className="flex flex-col gap-4">
           {lessons.map((lesson) => (
-            <article
-              key={lesson.id}
-              className="rounded border p-5"
-            >
-              <h2 className="text-xl font-semibold">
-                {lesson.title}
-              </h2>
-
-              <p className="mt-4 whitespace-pre-wrap break-words">
-                {lesson.body}
-              </p>
-
-              <p className="mt-4 text-sm">
-                Updated:{" "}
-                {new Date(lesson.updatedAt).toLocaleString()}
-              </p>
-            </article>
+            <Card key={lesson.id}>
+              <CardHeader>
+                <CardTitle>{lesson.title}</CardTitle>
+                <CardDescription>
+                  Updated {new Date(lesson.updatedAt).toLocaleString()}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap break-words">
+                  {lesson.body}
+                </p>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
-    </main>
+    </PageShell>
   );
 }

@@ -3,7 +3,21 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import LogoutButton from "../LogoutButton";
+
+import {
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+} from "@/components/page";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 type Profile = {
   name: string;
@@ -67,73 +81,59 @@ export default function StudentDashboard() {
   }, [router]);
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
-      <h1 className="mb-6 text-3xl font-bold">Student dashboard</h1>
+    <PageShell width="md">
+      <PageHeader title="Student dashboard" />
 
-      <div className="mb-6">
-        <LogoutButton />
-      </div>
+      {loading && <LoadingState label="Loading your account..." rows={1} />}
 
-      {loading && <p role="status">Loading your account...</p>}
-
-      {error && (
-        <p role="alert" className="text-red-600">
-          {error}
-        </p>
-      )}
+      <ErrorAlert message={error} />
 
       {!loading && !error && needsProfile && (
-        <section className="rounded border p-5">
-          <h2 className="mb-2 text-xl font-semibold">
-            Complete your registration
-          </h2>
-
-          <p className="mb-4">
-            Add your student details to receive your registration number.
-          </p>
-
-          <Link
-            href="/student/profile"
-            className="inline-block rounded bg-blue-700 px-4 py-2 text-white"
-          >
-            Complete profile
-          </Link>
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Complete your registration</CardTitle>
+            <CardDescription>
+              Add your student details to receive your registration number.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Link href="/student/profile" className={buttonVariants()}>
+              Complete profile
+            </Link>
+          </CardFooter>
+        </Card>
       )}
 
       {!loading && !error && profile && (
-        <section className="rounded border p-5">
-          <h2 className="text-xl font-semibold">
-            Welcome, {profile.name}
-          </h2>
-
-          <p className="mt-3">
-            Registration number:{" "}
-            <strong>{profile.registrationNumber}</strong>
-          </p>
-
-          <Link
-            href="/student/courses"
-            className="mt-5 inline-block rounded bg-blue-700 px-4 py-2 text-white"
-          >
-            Browse courses
-          </Link>
-
-          <Link
-            href="/student/attendance"
-            className="mt-4 inline-block rounded border px-4 py-2"
-          >
-            View my attendance
-          </Link>
-
-          <Link
-            href="/student/check-in"
-            className="mt-4 inline-block rounded border px-4 py-2"
-          >
-            Mark my attendance
-          </Link>
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Welcome, {profile.name}</CardTitle>
+            <CardDescription>
+              Registration number:{" "}
+              <span className="font-mono font-medium text-foreground">
+                {profile.registrationNumber}
+              </span>
+            </CardDescription>
+          </CardHeader>
+          <CardFooter className="flex flex-wrap gap-2">
+            <Link href="/student/check-in" className={buttonVariants()}>
+              Mark my attendance
+            </Link>
+            <Link
+              href="/student/courses"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              Browse courses
+            </Link>
+            <Link
+              href="/student/attendance"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              View my attendance
+            </Link>
+          </CardFooter>
+        </Card>
       )}
-    </main>
+    </PageShell>
   );
 }

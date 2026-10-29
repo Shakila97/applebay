@@ -4,6 +4,27 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  SuccessAlert,
+} from "@/components/page";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+
 type Course = {
   id: number;
   code: string;
@@ -150,29 +171,20 @@ export default function StudentCoursesPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <Link href="/student" className="text-blue-600 underline">
-        Back to dashboard
-      </Link>
+    <PageShell>
+      <PageHeader
+        backHref="/student"
+        title="Browse courses"
+        description="Enrol in a course to see its lessons and attendance sessions."
+      />
 
-      <h1 className="my-6 text-3xl font-bold">Browse courses</h1>
-
-      {error && (
-        <p role="alert" className="mb-4 text-red-600">
-          {error}
-        </p>
-      )}
-
-      {message && (
-        <p role="status" className="mb-4 text-green-700">
-          {message}
-        </p>
-      )}
+      <ErrorAlert message={error} />
+      <SuccessAlert message={message} />
 
       {loading ? (
-        <p role="status">Loading courses...</p>
+        <LoadingState label="Loading courses..." />
       ) : courses.length === 0 ? (
-        <p>No courses are available.</p>
+        <EmptyState title="No courses are available" />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {courses.map((course) => {
@@ -181,41 +193,48 @@ export default function StudentCoursesPage() {
             );
 
             return (
-              <section key={course.id} className="rounded border p-5">
-                <p className="text-sm">{course.code}</p>
-                <h2 className="mt-1 text-xl font-semibold">
-                  {course.name}
-                </h2>
-
-                <p className="mt-3">Level: {course.level}</p>
-                <p>Duration: {course.duration}</p>
-
-                <button
-                  type="button"
-                  disabled={enrolled || savingId !== null}
-                  onClick={() => enrol(course.id)}
-                  className="mt-4 rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
-                >
-                  {enrolled
-                    ? "Enrolled"
-                    : savingId === course.id
-                      ? "Enrolling..."
-                      : "Enrol"}
-                </button>
-
-                {enrolled && (
-                  <Link
-                    href={`/student/courses/${course.id}/contents`}
-                    className="mt-4 block text-blue-600 underline"
-                  >
-                    View lessons
-                  </Link>
-                )}
-              </section>
+              <Card key={course.id}>
+                <CardHeader>
+                  <CardDescription className="font-mono">
+                    {course.code}
+                  </CardDescription>
+                  <CardTitle>{course.name}</CardTitle>
+                  {enrolled && (
+                    <CardAction>
+                      <Badge variant="secondary">Enrolled</Badge>
+                    </CardAction>
+                  )}
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">
+                  <p>Level: {course.level}</p>
+                  <p>Duration: {course.duration}</p>
+                </CardContent>
+                <CardFooter className="flex flex-wrap gap-2">
+                  {enrolled ? (
+                    <Link
+                      href={`/student/courses/${course.id}/contents`}
+                      className={buttonVariants({ variant: "outline" })}
+                    >
+                      View lessons
+                    </Link>
+                  ) : (
+                    <Button
+                      type="button"
+                      disabled={savingId !== null}
+                      onClick={() => enrol(course.id)}
+                    >
+                      {savingId === course.id && (
+                        <Spinner data-icon="inline-start" />
+                      )}
+                      {savingId === course.id ? "Enrolling..." : "Enrol"}
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
             );
           })}
         </div>
       )}
-    </main>
+    </PageShell>
   );
 }

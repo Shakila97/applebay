@@ -1,8 +1,31 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  StatusBadge,
+} from "@/components/page";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Attendance = {
   id: number;
@@ -91,77 +114,65 @@ export default function MyAttendancePage() {
   }, [router]);
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <Link href="/student" className="text-blue-600 underline">
-        Back to dashboard
-      </Link>
+    <PageShell>
+      <PageHeader backHref="/student" title="My attendance" />
 
-      <h1 className="my-6 text-3xl font-bold">My attendance</h1>
+      {loading && <LoadingState label="Loading your attendance..." />}
 
-      {loading && <p role="status">Loading your attendance...</p>}
-
-      {error && (
-        <p role="alert" className="text-red-600">
-          {error}
-        </p>
-      )}
+      <ErrorAlert message={error} />
 
       {!loading && !error && summary && (
         <>
-          <section className="mb-6 rounded border p-5">
-            <h2 className="text-xl font-semibold">
-              Attendance percentage
-            </h2>
-
-            <p className="my-3 text-3xl font-bold">
-              {summary.percentage === null
-                ? "No records"
-                : `${summary.percentage}%`}
-            </p>
-
-            <p>
-              Present: {summary.present} / Recorded: {summary.total}
-            </p>
-
-            <p className="mt-2 text-sm">
-              Across all your courses. Unmarked dates are excluded.
-            </p>
-          </section>
+          <Card>
+            <CardHeader>
+              <CardDescription>Attendance percentage</CardDescription>
+              <CardTitle className="text-3xl">
+                {summary.percentage === null
+                  ? "No records"
+                  : `${summary.percentage}%`}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              <p>
+                Present: {summary.present} / Recorded: {summary.total}
+              </p>
+              <p>Across all your courses. Unmarked dates are excluded.</p>
+            </CardContent>
+          </Card>
 
           {records.length === 0 ? (
-            <p>No attendance has been recorded yet.</p>
+            <EmptyState title="No attendance has been recorded yet" />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b">
-                    <th className="p-3">Date</th>
-                    <th className="p-3">Course</th>
-                    <th className="p-3">Status</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {records.map((record) => (
-                    <tr key={record.id} className="border-b">
-                      <td className="p-3">
-                        {record.attendanceDate}
-                      </td>
-
-                      <td className="p-3">
-                        {record.enrolment.course.code} —{" "}
-                        {record.enrolment.course.name}
-                      </td>
-
-                      <td className="p-3">{record.status}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Card>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Course</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {records.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell>{record.attendanceDate}</TableCell>
+                        <TableCell>
+                          {record.enrolment.course.code} —{" "}
+                          {record.enrolment.course.name}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={record.status} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           )}
         </>
       )}
-    </main>
+    </PageShell>
   );
 }

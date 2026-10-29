@@ -3,6 +3,37 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "@/lib/apiFetch";
 
+import { OptionSelect } from "@/components/option-select";
+import {
+  EmptyState,
+  ErrorAlert,
+  LoadingState,
+  PageHeader,
+  PageShell,
+  StatusBadge,
+  SuccessAlert,
+} from "@/components/page";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 type Course = {
   id: number;
   code: string;
@@ -168,152 +199,154 @@ export default function AttendancePage() {
   }
 
   const busy = loading || savingId !== null;
-  const inputStyle = "mt-1 w-full rounded border p-2";
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-6 text-3xl font-bold">Attendance</h1>
+    <PageShell>
+      <PageHeader title="Attendance" />
 
-      {error && (
-        <p role="alert" className="mb-4 text-red-600">
-          {error}
-        </p>
-      )}
-
-      {message && (
-        <p role="status" className="mb-4 text-green-700">
-          {message}
-        </p>
-      )}
+      <ErrorAlert message={error} />
+      <SuccessAlert message={message} />
 
       {loadingCourses ? (
-        <p role="status">Loading courses...</p>
+        <LoadingState label="Loading courses..." rows={1} />
       ) : (
-        <form
-          onSubmit={loadRoster}
-          className="mb-8 rounded border p-5"
-        >
-          <fieldset
-            disabled={busy || courses.length === 0}
-            className="space-y-4"
-          >
-            <label className="block">
-              Course
-              <select
-                required
-                value={courseId}
-                onChange={(event) => {
-                  setCourseId(event.target.value);
-                  setLoaded(false);
-                  setMessage("");
-                }}
-                className={inputStyle}
-              >
-                <option value="">Choose a course</option>
-
-                {courses.map((course) => (
-                  <option key={course.id} value={course.id}>
-                    {course.code} — {course.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="block">
-              Date
-              <input
-                required
-                type="date"
-                max={today()}
-                value={date}
-                onChange={(event) => {
-                  setDate(event.target.value);
-                  setLoaded(false);
-                  setMessage("");
-                }}
-                className={inputStyle}
-              />
-            </label>
-
-            <button
+        <Card>
+          <CardHeader>
+            <CardTitle>Choose a class</CardTitle>
+            {courses.length === 0 && (
+              <CardDescription>Add a course first.</CardDescription>
+            )}
+          </CardHeader>
+          <CardContent>
+            <form id="roster-form" onSubmit={loadRoster}>
+              <FieldGroup className="grid gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="roster-course">Course</FieldLabel>
+                  <OptionSelect
+                    id="roster-course"
+                    required
+                    placeholder="Choose a course"
+                    disabled={busy || courses.length === 0}
+                    value={courseId}
+                    onChange={(value) => {
+                      setCourseId(value);
+                      setLoaded(false);
+                      setMessage("");
+                    }}
+                    options={courses.map((course) => ({
+                      value: String(course.id),
+                      label: `${course.code} — ${course.name}`,
+                    }))}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="roster-date">Date</FieldLabel>
+                  <Input
+                    id="roster-date"
+                    required
+                    type="date"
+                    max={today()}
+                    disabled={busy || courses.length === 0}
+                    value={date}
+                    onChange={(event) => {
+                      setDate(event.target.value);
+                      setLoaded(false);
+                      setMessage("");
+                    }}
+                  />
+                </Field>
+              </FieldGroup>
+            </form>
+          </CardContent>
+          <CardFooter>
+            <Button
               type="submit"
-              className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
+              form="roster-form"
+              disabled={busy || courses.length === 0 || !courseId}
             >
+              {loading && <Spinner data-icon="inline-start" />}
               {loading ? "Loading..." : "Load students"}
-            </button>
-          </fieldset>
-
-          {courses.length === 0 && (
-            <p className="mt-3">Add a course first.</p>
-          )}
-        </form>
+            </Button>
+          </CardFooter>
+        </Card>
       )}
 
       {loaded && enrolments.length === 0 && (
-        <p>No students are enrolled in this course.</p>
+        <EmptyState title="No students are enrolled in this course" />
       )}
 
       {loaded && enrolments.length > 0 && (
-        <>
-          <p className="mb-4">
-            Each Present or Absent button saves immediately.
-          </p>
+        <Card>
+          <CardHeader>
+            <CardTitle>Students</CardTitle>
+            <CardDescription>
+              Each Present or Absent button saves immediately.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>NIC</TableHead>
+                  <TableHead>Saved status</TableHead>
+                  <TableHead className="text-right">Mark attendance</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {enrolments.map((enrolment) => {
+                  const mark = marks[enrolment.id] ?? "Unmarked";
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b">
-                  <th className="p-3">Student</th>
-                  <th className="p-3">NIC</th>
-                  <th className="p-3">Saved status</th>
-                  <th className="p-3">Mark attendance</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {enrolments.map((enrolment) => (
-                  <tr key={enrolment.id} className="border-b">
-                    <td className="p-3">{enrolment.student.name}</td>
-                    <td className="p-3">{enrolment.student.nic}</td>
-                    <td className="p-3">
-                      {marks[enrolment.id] ?? "Unmarked"}
-                    </td>
-                    <td className="p-3">
-                      {savingId === enrolment.id ? (
-                        <span role="status">Saving...</span>
-                      ) : (
-                        <div className="flex gap-2">
-                          <button
+                  return (
+                    <TableRow key={enrolment.id}>
+                      <TableCell className="font-medium">
+                        {enrolment.student.name}
+                      </TableCell>
+                      <TableCell className="font-mono">
+                        {enrolment.student.nic}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={mark} />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-2">
+                          {savingId === enrolment.id && (
+                            <Spinner aria-label="Saving" />
+                          )}
+                          <Button
                             type="button"
+                            size="sm"
+                            variant={mark === "Present" ? "default" : "outline"}
                             disabled={busy}
                             onClick={() =>
                               markAttendance(enrolment.id, "Present")
                             }
-                            className="rounded bg-green-700 px-3 py-2 text-white disabled:opacity-50"
                           >
                             Present
-                          </button>
-
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            size="sm"
+                            variant={
+                              mark === "Absent" ? "destructive" : "outline"
+                            }
                             disabled={busy}
                             onClick={() =>
                               markAttendance(enrolment.id, "Absent")
                             }
-                            className="rounded bg-red-700 px-3 py-2 text-white disabled:opacity-50"
                           >
                             Absent
-                          </button>
+                          </Button>
                         </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
-    </main>
+    </PageShell>
   );
 }
