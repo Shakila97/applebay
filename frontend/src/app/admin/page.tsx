@@ -10,7 +10,6 @@ import { ArrowRightIcon } from "lucide-react";
 import {
   ErrorAlert,
   LoadingState,
-  PageHeader,
   PageShell,
 } from "@/components/page";
 import {
@@ -118,11 +117,6 @@ export default function AdminDashboard() {
 
   return (
     <PageShell width="xl">
-      <PageHeader
-        title="Admin dashboard"
-        description={account ? `Signed in as ${account.email}` : undefined}
-      />
-
       {loading && <LoadingState label="Checking your account..." rows={1} />}
 
       <ErrorAlert message={error} />
@@ -137,7 +131,7 @@ export default function AdminDashboard() {
             >
               <Card className="h-full transition-colors hover:bg-muted/50">
                 <CardHeader>
-                  <CardTitle>{module.title}</CardTitle>
+                  <CardTitle className="font-bold">{module.title}</CardTitle>
                   <CardDescription>{module.description}</CardDescription>
                 </CardHeader>
                 <CardFooter className="text-sm font-medium">
