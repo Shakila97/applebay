@@ -54,6 +54,15 @@ public class LecturerSessionController {
                 authentication.getName(), courseId);
     }
 
+    @PutMapping("/sessions/{sessionId}/start")
+    public AttendanceSessionService.SessionView startSession(
+            Authentication authentication,
+            @PathVariable Long sessionId) {
+
+        return service.startSession(
+                authentication.getName(), sessionId);
+    }
+
     @PutMapping("/sessions/{sessionId}/close")
     public AttendanceSessionService.SessionView closeSession(
             Authentication authentication,

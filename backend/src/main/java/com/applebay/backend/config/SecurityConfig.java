@@ -31,7 +31,10 @@ public class SecurityConfig {
             .authenticationProvider(provider)
 
             .authorizeHttpRequests(auth -> auth
-                .dispatcherTypeMatchers(DispatcherType.ERROR)
+                // ASYNC: SSE streams re-dispatch after the original,
+                // already-authorized request.
+                .dispatcherTypeMatchers(
+                        DispatcherType.ERROR, DispatcherType.ASYNC)
                     .permitAll()
 
                 .requestMatchers(

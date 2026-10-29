@@ -19,12 +19,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-type Profile = {
-  name: string;
-  registrationNumber: string;
-};
+import {
+  StudentDashboard,
+  type StudentProfile as Profile,
+} from "./_components/StudentDashboard";
 
-export default function StudentDashboard() {
+export default function StudentPage() {
   const router = useRouter();
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -80,6 +80,10 @@ export default function StudentDashboard() {
     return () => controller.abort();
   }, [router]);
 
+  if (profile) {
+    return <StudentDashboard profile={profile} />;
+  }
+
   return (
     <PageShell width="md">
       <PageHeader title="Student dashboard" />
@@ -104,36 +108,6 @@ export default function StudentDashboard() {
         </Card>
       )}
 
-      {!loading && !error && profile && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Welcome, {profile.name}</CardTitle>
-            <CardDescription>
-              Registration number:{" "}
-              <span className="font-mono font-medium text-foreground">
-                {profile.registrationNumber}
-              </span>
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="flex flex-wrap gap-2">
-            <Link href="/student/check-in" className={buttonVariants()}>
-              Mark my attendance
-            </Link>
-            <Link
-              href="/student/courses"
-              className={buttonVariants({ variant: "outline" })}
-            >
-              Browse courses
-            </Link>
-            <Link
-              href="/student/attendance"
-              className={buttonVariants({ variant: "outline" })}
-            >
-              View my attendance
-            </Link>
-          </CardFooter>
-        </Card>
-      )}
     </PageShell>
   );
 }

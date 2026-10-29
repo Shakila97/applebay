@@ -32,19 +32,22 @@ public class AttendanceSessionService {
     private final LecturerRepository lecturers;
     private final CourseRepository courses;
     private final CourseLecturerRepository assignments;
+    private final LiveSessionEvents events;
 
     public AttendanceSessionService(
             AttendanceSessionRepository sessions,
             AppUserRepository users,
             LecturerRepository lecturers,
             CourseRepository courses,
-            CourseLecturerRepository assignments) {
+            CourseLecturerRepository assignments,
+            LiveSessionEvents events) {
 
         this.sessions = sessions;
         this.users = users;
         this.lecturers = lecturers;
         this.courses = courses;
         this.assignments = assignments;
+        this.events = events;
     }
 
     public record SessionView(
@@ -155,7 +158,9 @@ public class AttendanceSessionService {
         session.setStatus(AttendanceSession.Status.OPEN);
 
         try {
-            return toView(sessions.saveAndFlush(session));
+            SessionView saved = toView(sessions.saveAndFlush(session));
+            events.sessionChanged(courseId);
+            return saved;
 
         } catch (DataIntegrityViolationException exception) {
             throw new ResponseStatusException(
@@ -190,6 +195,51 @@ public class AttendanceSessionService {
 
         session.setStatus(AttendanceSession.Status.CLOSED);
 
-        return toView(sessions.save(session));
+        SessionView saved = toView(sessions.save(session));
+        events.sessionChanged(session.getCourse().getId());
+        return saved;
+    }
+
+    /**
+     * Starts a scheduled session now instead of waiting for its start time.
+     * Only today's sessions can be started, so the session date still
+     * matches the attendance date of every mark taken in it.
+     */
+    @Transactional
+    public SessionView startSession(String email, Long sessionId) {
+        Lecturer lecturer = getLecturer(email);
+
+        AttendanceSession session = sessions.findByIdForUpdate(sessionId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Session not found"));
+
+        checkAssignment(session.getCourse().getId(), lecturer);
+
+        Instant now = Instant.now();
+
+        if (StudentLiveService.stateOf(session, now)
+                != StudentLiveService.SessionState.SCHEDULED) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Only a scheduled session can be started");
+        }
+
+        LocalDate today = now.atZone(ZoneId.of("Asia/Colombo"))
+                .toLocalDate();
+
+        if (!session.getSessionDate().equals(today)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Only today's session can be started early");
+        }
+
+        session.setOpensAt(now);
+        session.setStartedAt(now);
+
+        SessionView saved = toView(sessions.save(session));
+        events.sessionChanged(session.getCourse().getId());
+        return saved;
     }
 }

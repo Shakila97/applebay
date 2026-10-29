@@ -22,6 +22,8 @@ public interface AttendanceSessionRepository
 
     List<AttendanceSession> findByCourse_Id(Long courseId);
 
+    List<AttendanceSession> findByCourse_IdIn(Collection<Long> courseIds);
+
     List<AttendanceSession>
     findByCourse_IdInAndStatusAndOpensAtLessThanEqualAndClosesAtGreaterThan(
             Collection<Long> courseIds,
