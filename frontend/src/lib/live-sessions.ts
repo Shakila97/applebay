@@ -135,7 +135,8 @@ export function useStudentLiveSessions() {
 
   // Initial load + SSE subscription.
   useEffect(() => {
-    load();
+    // Deferred so the first fetch runs as a callback, not in the effect body.
+    const initial = setTimeout(load, 0);
 
     const source = new EventSource("/api/student/live/events");
 
@@ -147,7 +148,10 @@ export function useStudentLiveSessions() {
     source.addEventListener("session-changed", () => load());
     source.onerror = () => setConnected(false);
 
-    return () => source.close();
+    return () => {
+      clearTimeout(initial);
+      source.close();
+    };
   }, [load]);
 
   // Clock tick for countdowns and on-schedule state changes.
