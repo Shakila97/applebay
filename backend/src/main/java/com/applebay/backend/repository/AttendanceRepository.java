@@ -13,6 +13,9 @@ public interface AttendanceRepository
     Optional<Attendance> findByEnrolment_IdAndAttendanceDate(
             Long enrolmentId, LocalDate attendanceDate);
 
+    Optional<Attendance> findByEnrolment_IdAndSession_Id(
+            Long enrolmentId, Long sessionId);
+
     List<Attendance> findByEnrolment_Student_IdOrderByAttendanceDateDesc(
             Long studentId);
 

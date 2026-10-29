@@ -15,6 +15,11 @@ public class CourseContent {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    // NULL until the content is placed in a module.
+    @ManyToOne
+    @JoinColumn(name = "module_id")
+    private CourseModule module;
+
     @Column(nullable = false, length = 150)
     private String title;
 
@@ -43,6 +48,14 @@ public class CourseContent {
 
     public void setCourse(Course course) {
         this.course = course;
+    }
+
+    public CourseModule getModule() {
+        return module;
+    }
+
+    public void setModule(CourseModule module) {
+        this.module = module;
     }
 
     public String getTitle() {

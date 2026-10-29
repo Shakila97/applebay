@@ -32,6 +32,7 @@ public class LecturerContentService {
 
     public record ContentView(
             Long id,
+            Long moduleId,
             String title,
             String body,
             Instant updatedAt) {
@@ -59,6 +60,9 @@ public class LecturerContentService {
     private ContentView toView(CourseContent content) {
         return new ContentView(
                 content.getId(),
+                content.getModule() == null
+                        ? null
+                        : content.getModule().getId(),
                 content.getTitle(),
                 content.getBody(),
                 content.getUpdatedAt());
@@ -113,5 +117,24 @@ public class LecturerContentService {
         content.setBody(body.trim());
 
         return toView(contents.saveAndFlush(content));
+    }
+
+    @Transactional
+    public void deleteContent(
+            String email,
+            Long courseId,
+            Long contentId) {
+
+        // 403 unless course_lecturers links this lecturer to the course.
+        requireAssignedCourse(email, courseId);
+
+        // Scoped to the course, so a content ID from another course is a 404.
+        CourseContent content = contents
+                .findByIdAndCourse_Id(contentId, courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Content not found in this course"));
+
+        contents.delete(content);
     }
 }

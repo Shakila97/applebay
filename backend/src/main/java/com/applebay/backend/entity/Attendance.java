@@ -1,5 +1,6 @@
 package com.applebay.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -19,6 +20,12 @@ public class Attendance {
     @ManyToOne(optional = false)
     @JoinColumn(name = "enrolment_id", nullable = false)
     private Enrolment enrolment;
+
+    // NULL for marks recorded outside a session (Admin attendance page).
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "session_id")
+    private AttendanceSession session;
 
     @Column(name = "attendance_date", nullable = false)
     private LocalDate attendanceDate;
@@ -45,6 +52,19 @@ public class Attendance {
 
     public void setEnrolment(Enrolment enrolment) {
         this.enrolment = enrolment;
+    }
+
+    public AttendanceSession getSession() {
+        return session;
+    }
+
+    public void setSession(AttendanceSession session) {
+        this.session = session;
+    }
+
+    // Serialized as "sessionId" instead of the whole session.
+    public Long getSessionId() {
+        return session == null ? null : session.getId();
     }
 
     public LocalDate getAttendanceDate() {

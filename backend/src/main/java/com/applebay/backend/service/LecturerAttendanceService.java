@@ -153,6 +153,7 @@ public class LecturerAttendanceService {
                 .orElseGet(Attendance::new);
 
         mark.setEnrolment(enrolment);
+        mark.setSession(session);
         mark.setAttendanceDate(session.getSessionDate());
         mark.setStatus(status);
 

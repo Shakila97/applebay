@@ -40,6 +40,10 @@ public class AttendanceSession {
     @Column(name = "closes_at", nullable = false)
     private Instant closesAt;
 
+    // Set when the lecturer starts the session manually; NULL otherwise.
+    @Column(name = "started_at")
+    private Instant startedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private Status status = Status.OPEN;
@@ -89,6 +93,14 @@ public class AttendanceSession {
 
     public void setClosesAt(Instant closesAt) {
         this.closesAt = closesAt;
+    }
+
+    public Instant getStartedAt() {
+        return startedAt;
+    }
+
+    public void setStartedAt(Instant startedAt) {
+        this.startedAt = startedAt;
     }
 
     public Status getStatus() {

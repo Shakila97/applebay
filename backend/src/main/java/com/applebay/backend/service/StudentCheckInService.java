@@ -144,10 +144,13 @@ public class StudentCheckInService {
                     "Attendance check-in is closed");
         }
 
+        // The session row lock above serialises concurrent check-ins for this
+        // session, so this lookup cannot race another insert for the same student.
         var existing = attendance
-                .findByEnrolment_IdAndAttendanceDate(
-                        enrolment.getId(),
-                        session.getSessionDate());
+                .findByEnrolment_IdAndSession_Id(
+                        enrolment.getId(), session.getId())
+                .or(() -> attendance.findByEnrolment_IdAndAttendanceDate(
+                        enrolment.getId(), session.getSessionDate()));
 
         if (existing.isPresent()) {
             Attendance mark = existing.get();
@@ -156,6 +159,12 @@ public class StudentCheckInService {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
                         "Attendance is already marked Absent. Contact your lecturer");
+            }
+
+            // A same-day mark made outside the session gets linked to it.
+            if (mark.getSession() == null) {
+                mark.setSession(session);
+                attendance.save(mark);
             }
 
             return new CheckInResponse(
@@ -167,10 +176,13 @@ public class StudentCheckInService {
 
         Attendance mark = new Attendance();
         mark.setEnrolment(enrolment);
+        mark.setSession(session);
         mark.setAttendanceDate(session.getSessionDate());
         mark.setStatus(Attendance.Status.Present);
 
         try {
+            // Last line of defence: UNIQUE (session_id, enrolment_id) and
+            // UNIQUE (enrolment_id, attendance_date) both map to 409 here.
             Attendance saved = attendance.saveAndFlush(mark);
 
             return new CheckInResponse(

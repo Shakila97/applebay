@@ -53,6 +53,17 @@ public class LecturerContentController {
                 request.body());
     }
 
+    @DeleteMapping("/{contentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteContent(
+            Authentication authentication,
+            @PathVariable Long courseId,
+            @PathVariable Long contentId) {
+
+        service.deleteContent(
+                authentication.getName(), courseId, contentId);
+    }
+
     @PutMapping("/{contentId}")
     public LecturerContentService.ContentView updateContent(
             Authentication authentication,
