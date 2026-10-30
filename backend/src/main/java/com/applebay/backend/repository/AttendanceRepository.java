@@ -21,4 +21,6 @@ public interface AttendanceRepository
 
     List<Attendance> findByEnrolment_Course_IdAndAttendanceDate(
             Long courseId, LocalDate attendanceDate);
+
+    void deleteByEnrolment_Id(Long enrolmentId);
 }

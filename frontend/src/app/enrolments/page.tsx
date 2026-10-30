@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { Trash2Icon } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 
 import { OptionSelect } from "@/components/option-select";
@@ -60,6 +61,7 @@ export default function EnrolmentsPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -152,6 +154,41 @@ export default function EnrolmentsPage() {
     }
   }
 
+  async function removeEnrolment(enrolment: Enrolment) {
+    if (
+      !window.confirm(
+        `Unenrol ${enrolment.student.name} from ${enrolment.course.name}? Their attendance for this course will also be deleted.`
+      )
+    )
+      return;
+
+    setDeletingId(enrolment.id);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await apiFetch(`/api/enrolments/${enrolment.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          "Could not remove the enrolment. Check your Admin session."
+        );
+      }
+
+      setEnrolments((current) =>
+        current.filter((item) => item.id !== enrolment.id)
+      );
+      setMessage("Student unenrolled.");
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Something went wrong."
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const formDisabled = saving || !students.length || !courses.length;
 
@@ -236,6 +273,7 @@ export default function EnrolmentsPage() {
                       <TableHead>Student</TableHead>
                       <TableHead>NIC</TableHead>
                       <TableHead>Course</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -249,6 +287,24 @@ export default function EnrolmentsPage() {
                         </TableCell>
                         <TableCell>
                           {enrolment.course.code} — {enrolment.course.name}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            disabled={saving || deletingId !== null}
+                            onClick={() => removeEnrolment(enrolment)}
+                          >
+                            {deletingId === enrolment.id ? (
+                              <Spinner data-icon="inline-start" />
+                            ) : (
+                              <Trash2Icon data-icon="inline-start" />
+                            )}
+                            {deletingId === enrolment.id
+                              ? "Removing..."
+                              : "Remove"}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}

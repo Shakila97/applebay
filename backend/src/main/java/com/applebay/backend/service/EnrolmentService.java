@@ -3,6 +3,7 @@ package com.applebay.backend.service;
 import com.applebay.backend.entity.Course;
 import com.applebay.backend.entity.Student;
 import com.applebay.backend.entity.Enrolment;
+import com.applebay.backend.repository.AttendanceRepository;
 import com.applebay.backend.repository.CourseRepository;
 import com.applebay.backend.repository.StudentRepository;
 import com.applebay.backend.repository.EnrolmentRepository;
@@ -20,15 +21,18 @@ public class EnrolmentService {
     private final EnrolmentRepository enrolmentRepository;
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
+    private final AttendanceRepository attendanceRepository;
 
     public EnrolmentService(
             EnrolmentRepository enrolmentRepository,
             StudentRepository studentRepository,
-            CourseRepository courseRepository) {
+            CourseRepository courseRepository,
+            AttendanceRepository attendanceRepository) {
 
         this.enrolmentRepository = enrolmentRepository;
         this.studentRepository = studentRepository;
         this.courseRepository = courseRepository;
+        this.attendanceRepository = attendanceRepository;
     }
 
     public List<Enrolment> getAllEnrolments() {
@@ -74,5 +78,18 @@ public class EnrolmentService {
     }
 
     return enrolmentRepository.findByCourse_Id(courseId);
+    }
+
+    // Attendance rows reference the enrolment (ON DELETE RESTRICT),
+    // so they are removed with it.
+    @Transactional
+    public void unenrol(Long enrolmentId) {
+
+        Enrolment enrolment = enrolmentRepository.findById(enrolmentId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Enrolment not found"));
+
+        attendanceRepository.deleteByEnrolment_Id(enrolment.getId());
+        enrolmentRepository.delete(enrolment);
     }
 }

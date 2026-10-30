@@ -19,15 +19,18 @@ public class StudentCourseService {
     private final StudentProfileService profiles;
     private final CourseRepository courses;
     private final EnrolmentRepository enrolments;
+    private final EnrolmentService enrolmentService;
 
     public StudentCourseService(
             StudentProfileService profiles,
             CourseRepository courses,
-            EnrolmentRepository enrolments) {
+            EnrolmentRepository enrolments,
+            EnrolmentService enrolmentService) {
 
         this.profiles = profiles;
         this.courses = courses;
         this.enrolments = enrolments;
+        this.enrolmentService = enrolmentService;
     }
 
     @Transactional(readOnly = true)
@@ -71,5 +74,18 @@ public class StudentCourseService {
                     HttpStatus.CONFLICT,
                     "Enrolment could not be saved. Refresh and check your enrolments");
         }
+    }
+
+    @Transactional
+    public void unenrol(String email, Long courseId) {
+        var student = profiles.getProfile(email);
+
+        Enrolment enrolment = enrolments
+                .findByStudent_IdAndCourse_Id(student.getId(), courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "You are not enrolled in this course"));
+
+        enrolmentService.unenrol(enrolment.getId());
     }
 }

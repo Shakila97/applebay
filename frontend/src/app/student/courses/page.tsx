@@ -114,6 +114,63 @@ export default function StudentCoursesPage() {
     return () => controller.abort();
   }, [router]);
 
+  async function unenrol(course: Course) {
+    if (
+      !window.confirm(
+        `Unenrol from ${course.name}? Your attendance for this course will also be deleted.`
+      )
+    )
+      return;
+
+    setSavingId(course.id);
+    setError("");
+    setMessage("");
+
+    try {
+      const csrfResponse = await fetch("/api/auth/csrf", {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+
+      if (!csrfResponse.ok) {
+        throw new Error("Could not prepare your request.");
+      }
+
+      const csrf: CsrfResponse = await csrfResponse.json();
+
+      const response = await fetch(
+        `/api/student/courses/${course.id}/enrolments`,
+        {
+          method: "DELETE",
+          credentials: "same-origin",
+          headers: {
+            [csrf.headerName]: csrf.token,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        router.replace("/login");
+        return;
+      }
+
+      if (!response.ok && response.status !== 404) {
+        throw new Error("Could not unenrol. Please try again.");
+      }
+
+      setEnrolments((current) =>
+        current.filter((enrolment) => enrolment.course.id !== course.id)
+      );
+      setMessage(`You unenrolled from ${course.name}.`);
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Something went wrong."
+      );
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   async function enrol(courseId: number) {
     setSavingId(courseId);
     setError("");
@@ -211,12 +268,26 @@ export default function StudentCoursesPage() {
                 </CardContent>
                 <CardFooter className="flex flex-wrap gap-2">
                   {enrolled ? (
-                    <Link
-                      href={`/student/courses/${course.id}/contents`}
-                      className={buttonVariants({ variant: "outline" })}
-                    >
-                      View lessons
-                    </Link>
+                    <>
+                      <Link
+                        href={`/student/courses/${course.id}/contents`}
+                        className={buttonVariants({ variant: "outline" })}
+                      >
+                        View lessons
+                      </Link>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-destructive"
+                        disabled={savingId !== null}
+                        onClick={() => unenrol(course)}
+                      >
+                        {savingId === course.id && (
+                          <Spinner data-icon="inline-start" />
+                        )}
+                        {savingId === course.id ? "Unenrolling..." : "Unenrol"}
+                      </Button>
+                    </>
                   ) : (
                     <Button
                       type="button"

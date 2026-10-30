@@ -41,4 +41,10 @@ public class EnrolmentController {
 
     return enrolmentService.getEnrolmentsByCourse(courseId);
     }
+
+    @DeleteMapping("/{enrolmentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unenrol(@PathVariable Long enrolmentId) {
+        enrolmentService.unenrol(enrolmentId);
+    }
 }

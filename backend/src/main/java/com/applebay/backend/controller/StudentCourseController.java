@@ -41,4 +41,13 @@ public class StudentCourseController {
         return service.enrol(
                 authentication.getName(), courseId);
     }
+
+    @DeleteMapping("/courses/{courseId}/enrolments")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unenrol(
+            Authentication authentication,
+            @PathVariable Long courseId) {
+
+        service.unenrol(authentication.getName(), courseId);
+    }
 }
